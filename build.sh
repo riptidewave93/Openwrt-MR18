@@ -60,6 +60,7 @@ if [ $modify -eq 1 ]; then
   make menuconfig
   Msg "Loading Kernel Menuconfig"
   make kernel_menuconfig
+  cd - > /dev/null
   Msg "Copy kernel config to nand-default? (You normally want this....)"
   Msg "y/N?"
   read input
@@ -68,7 +69,6 @@ if [ $modify -eq 1 ]; then
     cp $clonedir/build_dir/target-mips_34kc_uClibc-0.9.33.2/linux-ar71xx_nand/linux-3.18.14/.config $clonedir/target/linux/ar71xx/config-3.18
     cp $clonedir/target/linux/ar71xx/config-3.18 $clonedir/target/linux/ar71xx/nand/config-default
   fi
-  cd - > /dev/null
 fi
 
 Msg "Building Time!!!"
