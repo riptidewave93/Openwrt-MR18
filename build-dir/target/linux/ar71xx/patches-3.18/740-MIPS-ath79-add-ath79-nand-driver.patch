@@ -26,7 +26,7 @@
 +#include <linux/mtd/partitions.h>
 +
 +#include <asm/mach-ath79/ath79.h>
-+#include <asm/mach-ath79/ar71xx_regs.h>
++#include <asm/mach-ath79/ath79_nand_regs.h>
 +#include <asm/mach-ath79/nand.h>
 +#include <linux/spi/flash.h>
 +
@@ -261,12 +261,12 @@
 +
 +	ath79_nand->controller = (void __iomem *)
 +		KSEG1ADDR((soc_is_ar934x() ?
-+			   AR934X_NFC_BASE :
-+			   QCA955X_NFC_BASE));
++			   AR934X_NAND_BASE :
++			   QCA955X_NAND_BASE));
 +
-+	ath79_device_reset_set(AR934X_RESET_NANDF);
++	ath79_device_reset_set(AR934X_RESET_NAND);
 +	udelay(100);
-+	ath79_device_reset_clear(AR934X_RESET_NANDF);
++	ath79_device_reset_clear(AR934X_RESET_NAND);
 +	udelay(100);
 +
 +	mtd = &ath79_nand->mtd;
