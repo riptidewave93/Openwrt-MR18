@@ -9,37 +9,29 @@
  *  under the terms of the GNU General Public License version 2 as published
  *  by the Free Software Foundation.
  */
+ #include <linux/platform_device.h>
+ #include <linux/gpio.h>
+ #include <linux/mtd/mtd.h>
+ #include <linux/mtd/partitions.h>
+ #include <linux/spi/flash.h>
+ #include <linux/pci.h>
+ #include <asm/mips_machine.h>
+ #include <linux/ath9k_platform.h>
+ #include <asm/mach-ath79/ath79_nand_regs.h>
 
-#include <linux/module.h>
-#include <linux/types.h>
-#include <linux/init.h>
-#include <linux/kernel.h>
-#include <linux/string.h>
-#include <linux/init.h>
+ #include <linux/leds.h>
+ #include <linux/leds-nu801.h>
 
-#include <linux/platform_device.h>
-#include <linux/gpio.h>
-#include <linux/mtd/mtd.h>
-#include <linux/mtd/partitions.h>
-#include <linux/spi/flash.h>
-#include <linux/pci.h>
-#include <asm/mips_machine.h>
-#include <linux/ath9k_platform.h>
-#include <asm/mach-ath79/ar71xx_regs.h>
-
-#include <linux/leds.h>
-#include <linux/leds-nu801.h>
-
-#include "common.h"
-#include "pci.h"
-#include "dev-ap9x-pci.h"
-#include "dev-gpio-buttons.h"
-#include "dev-eth.h"
-#include "dev-leds-gpio.h"
-#include "dev-m25p80.h"
-#include "dev-usb.h"
-#include "dev-wmac.h"
-#include "machtypes.h"
+ #include "common.h"
+ #include "pci.h"
+ #include "dev-ap9x-pci.h"
+ #include "dev-gpio-buttons.h"
+ #include "dev-eth.h"
+ #include "dev-leds-gpio.h"
+ #include "dev-m25p80.h"
+ #include "dev-usb.h"
+ #include "dev-wmac.h"
+ #include "machtypes.h"
 
 #define MR18_GPIO_LED_POWER_WHITE    18
 #define MR18_GPIO_LED_POWER_ORANGE    21
@@ -67,7 +59,7 @@ static struct gpio_led MR18_leds_gpio[] __initdata = {
   }, {
     .name    = "mr18:power:orange",
     .gpio    = MR18_GPIO_LED_POWER_ORANGE,
-    .active_low  = 1,
+    .active_low  = 0,
   },
 };
 
@@ -152,32 +144,30 @@ static void __init MR18_setup(void)
 {
   u8 *mac = (u8 *) KSEG1ADDR(0x1fff0000);
 
-  struct mtd_info *mtd;
-  mtd = get_mtd_device_nm("caldata");
-
-  if (IS_ERR(mtd)) {
-    pr_err("%s: Unable to find calibration data, err = %lx\n",
-           __func__, PTR_ERR(mtd));
-  } else {
-    pr_err("%s: Calibration data, err = %lx\n",
-           __func__, PTR_ERR(mtd));
-  }
-
-  ath79_register_mdio(0,0x0);
+  ath79_register_m25p80(NULL);
 
   /* Debug the things */
   printk("Detected Meraki MR18\n");
 
-  /* Possible Ethernet location (Don't ask how I know) */
-  ath79_init_mac(ath79_eth0_data.mac_addr, mac, 0);
-  ath79_eth0_data.phy_if_mode = PHY_INTERFACE_MODE_RGMII;
-  ath79_eth0_data.phy_mask = MR18_WAN_PHYMASK;
-  ath79_register_eth(0);
+  /* MDIO */
+  ath79_register_mdio(0, 0x0);
 
-  /* NFC = NAND!!!!
-  ath79_nfc_set_ecc_mode(AR934X_NFC_ECC_HW);
+
+  /* Std NIC? */
+  ath79_init_mac(ath79_eth0_data.mac_addr, mac + MR18_MAC0_OFFSET, 0);
+  ath79_eth0_data.phy_if_mode = PHY_INTERFACE_MODE_RGMII;
+	ath79_eth0_data.phy_mask = BIT(0);
+	ath79_register_eth(0);
+
+  /* NAND - NFC OpenWRT Driver
+  ath79_nfc_set_ecc_mode(AR934X_NFC_ECC_SOFT);
+  ath79_nfc_set_parts(mr18_nand_flash_parts,
+                      ARRAY_SIZE(mr18_nand_flash_parts));
   ath79_register_nfc();
   */
+
+  /* NAND - Meraki ath79 Driver */
+  platform_device_register(&mr18_nand);
 
   /* Register the LED's and Buttons */
   platform_device_register(&tricolor_leds);
@@ -187,18 +177,21 @@ static void __init MR18_setup(void)
           ARRAY_SIZE(MR18_gpio_keys),
           MR18_gpio_keys);
 
-  /* Load up NAND */
-  platform_device_register(&mr18_nand);
+  /* tricolor things
+  if (tricolor_led_template.lei < 0) {
+    if( gpio_request(4, "tricolor") == 0) {
+      if( gpio_direction_output(4, 0) < 0) {
+        	pr_err("%s: Unable to pull GPIO4 low\n", __func__);
+        }
+    }
+  }
+  */
 
   /* Load up PCI stuff
   ath79_register_pci();
   ath79_register_wmac(mac + MR18_WMAC0_MAC_OFFSET, NULL);
   */
 
-  /* CPU NIC? No idea...
-  ath79_setup_qca955x_eth_cfg(QCA955X_ETH_CFG_RGMII_EN);
-  ath79_init_mac(ath79_eth0_data.mac_addr, mac + MR18_MAC0_OFFSET, 0);
-  */
 }
 
 MIPS_MACHINE(ATH79_MACH_MR18, "MR18", "Meraki MR18", MR18_setup);

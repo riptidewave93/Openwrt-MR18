@@ -11,7 +11,7 @@
 +       select ATH79_DEV_GPIO_BUTTONS
 +       select ATH79_DEV_LEDS_GPIO
 +       select ATH79_DEV_SPI
-+       select ATH79_DEV_USB
++       select ATH79_DEV_M25P80
 +       select ATH79_DEV_WMAC
 +
  config ATH79_MACH_MR600
