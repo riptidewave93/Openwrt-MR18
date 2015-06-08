@@ -116,7 +116,7 @@
 +	}
 +}
 +
-+static int __devinit led_nu801_create(struct led_nu801_data *controller,
++static int __init led_nu801_create(struct led_nu801_data *controller,
 +				      struct device *parent,
 +				      int index,
 +				      enum led_brightness brightness,
@@ -150,7 +150,7 @@
 +}
 +
 +
-+static int __devinit
++static int __init
 +led_nu801_create_chain(const struct led_nu801_template *template,
 +		       struct led_nu801_data *controller,
 +		       struct device *parent)
@@ -256,7 +256,7 @@
 +	kfree(led_chain);
 +}
 +
-+static struct led_nu801_data * __devinit leds_nu801_create_of(struct platform_device *pdev)
++static struct led_nu801_data * __init leds_nu801_create_of(struct platform_device *pdev)
 +{
 +	struct device_node *np = pdev->dev.of_node, *child;
 +	struct led_nu801_data *controllers;
@@ -320,7 +320,7 @@
 +	return NULL;
 +}
 +
-+static int __devinit led_nu801_probe(struct platform_device *pdev)
++static int __init led_nu801_probe(struct platform_device *pdev)
 +{
 +	struct led_nu801_platform_data *pdata = pdev->dev.platform_data;
 +	struct led_nu801_data *controllers;
@@ -359,7 +359,7 @@
 +	return ret;
 +}
 +
-+static int __devexit led_nu801_remove(struct platform_device *pdev)
++static int led_nu801_remove(struct platform_device *pdev)
 +{
 +	int i;
 +	struct led_nu801_platform_data *pdata = pdev->dev.platform_data;
@@ -383,7 +383,7 @@
 +
 +static struct platform_driver led_nu801_driver = {
 +	.probe		= led_nu801_probe,
-+	.remove		= __devexit_p(led_nu801_remove),
++	.remove		= led_nu801_remove,
 +	.driver		= {
 +		.name	= "leds-nu801",
 +		.owner	= THIS_MODULE,
