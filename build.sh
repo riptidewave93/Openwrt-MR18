@@ -10,7 +10,7 @@ Msg() {
 }
 
 # Do we want menuconfig's and an option to save configs?
-if [ $1 == "modify" ]; then
+if [ "$1" = "modify" ]; then
   modify=1
 else
   modify=0
