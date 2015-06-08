@@ -3,21 +3,18 @@
  *
  *  Copyright (C) 2015 Chris Blake <chrisrblake93@gmail.com>
  *
- *  Based on Cisco Meraki GPL Release r23-20150601
+ *  Based on Cisco Meraki GPL Release r23-20150601 MR18 Device Config
  *
  *  This program is free software; you can redistribute it and/or modify it
  *  under the terms of the GNU General Public License version 2 as published
  *  by the Free Software Foundation.
  */
  #include <linux/platform_device.h>
- #include <linux/gpio.h>
- #include <linux/mtd/mtd.h>
  #include <linux/mtd/partitions.h>
- #include <linux/spi/flash.h>
- #include <linux/pci.h>
- #include <asm/mips_machine.h>
- #include <linux/ath9k_platform.h>
- #include <asm/mach-ath79/ath79_nand_regs.h>
+ #include <linux/ar8216_platform.h>
+
+ #include <asm/mach-ath79/ar71xx_regs.h>
+ /* <asm/mach-ath79/ath79_nand_regs.h> */
 
  #include <linux/leds.h>
  #include <linux/leds-nu801.h>
@@ -140,6 +137,13 @@ static struct platform_device mr18_nand = {
     .dev.platform_data = &mr18_nand_flash_data,
 };
 
+static struct mdio_board_info mr18_mdio0_info[] = {
+	{
+		.bus_id = "ag71xx-mdio.0",
+		.phy_addr = 0,
+	},
+};
+
 static void __init MR18_setup(void)
 {
   u8 *mac = (u8 *) KSEG1ADDR(0x1fff0000);
@@ -149,14 +153,25 @@ static void __init MR18_setup(void)
   /* Debug the things */
   printk("Detected Meraki MR18\n");
 
+  /* Early NIC Init */
+  ath79_eth0_pll_data.pll_1000 = 0xa6000000;
+
+  /* Enable Eth? */
+  ath79_setup_qca955x_eth_cfg(QCA955X_ETH_CFG_RGMII_EN);
+
   /* MDIO */
   ath79_register_mdio(0, 0x0);
 
-
   /* Std NIC? */
   ath79_init_mac(ath79_eth0_data.mac_addr, mac + MR18_MAC0_OFFSET, 0);
+
+  mdiobus_register_board_info(mr18_mdio0_info,
+				    ARRAY_SIZE(mr18_mdio0_info));
+
   ath79_eth0_data.phy_if_mode = PHY_INTERFACE_MODE_RGMII;
-	ath79_eth0_data.phy_mask = BIT(0);
+	ath79_eth0_data.phy_mask = MR18_WAN_PHYMASK;
+  ath79_eth0_data.mii_bus_dev = &ath79_mdio0_device.dev;
+
 	ath79_register_eth(0);
 
   /* NAND - NFC OpenWRT Driver
