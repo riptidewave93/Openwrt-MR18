@@ -1,6 +1,6 @@
 --- a/drivers/mtd/nand/ath79_nand.c
 +++ b/drivers/mtd/nand/ath79_nand.c
-@@ -0,0 +1,352 @@
+@@ -0,0 +1,354 @@
 +/*
 + * NAND Chip driver for Atheros on-chip NAND Flash Controller
 + *
@@ -250,6 +250,8 @@
 +	struct ath79_nand *ath79_nand;
 +	int nr_parts = 0;
 +	struct mtd_partition *mtd_parts=NULL;
++
++ printk(DRV_NAME ": Meraki NAND Driver v0.1");
 +
 +	if (!soc_is_ar934x() && !soc_is_qca955x())
 +		return -ENODEV;
