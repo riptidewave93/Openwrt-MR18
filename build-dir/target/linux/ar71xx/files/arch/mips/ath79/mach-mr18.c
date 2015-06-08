@@ -177,16 +177,6 @@ static void __init MR18_setup(void)
           ARRAY_SIZE(MR18_gpio_keys),
           MR18_gpio_keys);
 
-  /* tricolor things
-  if (tricolor_led_template.lei < 0) {
-    if( gpio_request(4, "tricolor") == 0) {
-      if( gpio_direction_output(4, 0) < 0) {
-        	pr_err("%s: Unable to pull GPIO4 low\n", __func__);
-        }
-    }
-  }
-  */
-
   /* Load up PCI stuff
   ath79_register_pci();
   ath79_register_wmac(mac + MR18_WMAC0_MAC_OFFSET, NULL);

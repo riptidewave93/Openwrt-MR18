@@ -20,17 +20,22 @@ Priority List
   3. Bringup device ethernet Interface
   4. Bringup W-Fi interfaces
   5. Figure out plan for the bootloader (U-Boot?)
-  6. Work on system integration (GPIO's, LEDs, sysupgrade, etc.)
+  6. Work on system integration (sysupgrade, autodetect, etc.)
   7. Go from there....
 
 To Do
 -----
 ##### MR18
-  * Fix NAND errors (try using/fixing OpenWRT Driver)
+  * Fix NAND ECC errors (try using/fixing OpenWRT Driver if possible)
   * Bringup Ethernet Interface
   * Fix Wi-Fi Cal offset address
   * Enable SysFS HW Detection (ATM mach is hardcoded into kernel cmdline)
   * Fix bootloader problem (U-Boot? Hard coded images?)
+
+Working
+-----
+##### MR18
+  * All LED's and Reset Button!
 
 Notice
 ------
