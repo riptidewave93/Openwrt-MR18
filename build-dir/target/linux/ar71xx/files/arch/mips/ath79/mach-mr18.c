@@ -9,26 +9,30 @@
  *  under the terms of the GNU General Public License version 2 as published
  *  by the Free Software Foundation.
  */
- #include <linux/platform_device.h>
- #include <linux/mtd/partitions.h>
- #include <linux/ar8216_platform.h>
 
- #include <asm/mach-ath79/ar71xx_regs.h>
- /* <asm/mach-ath79/ath79_nand_regs.h> */
+#include <linux/platform_device.h>
+#include <linux/ath9k_platform.h>
+#include <linux/mtd/mtd.h>
+#include <linux/mtd/nand.h>
+#include <linux/mtd/partitions.h>
+#include <linux/platform/ar934x_nfc.h>
+#include <linux/ar8216_platform.h>
 
- #include <linux/leds.h>
- #include <linux/leds-nu801.h>
+#include <asm/mach-ath79/ar71xx_regs.h>
+/* <asm/mach-ath79/ath79_nand_regs.h> */
 
- #include "common.h"
- #include "pci.h"
- #include "dev-ap9x-pci.h"
- #include "dev-gpio-buttons.h"
- #include "dev-eth.h"
- #include "dev-leds-gpio.h"
- #include "dev-m25p80.h"
- #include "dev-usb.h"
- #include "dev-wmac.h"
- #include "machtypes.h"
+#include <linux/leds.h>
+#include <linux/leds-nu801.h>
+
+#include "common.h"
+#include "pci.h"
+#include "dev-ap9x-pci.h"
+#include "dev-gpio-buttons.h"
+#include "dev-eth.h"
+#include "dev-leds-gpio.h"
+#include "dev-nfc.h"
+#include "dev-wmac.h"
+#include "machtypes.h"
 
 #define MR18_GPIO_LED_POWER_WHITE    18
 #define MR18_GPIO_LED_POWER_ORANGE    21
@@ -37,7 +41,7 @@
 #define MR18_KEYS_POLL_INTERVAL    20  /* msecs */
 #define MR18_KEYS_DEBOUNCE_INTERVAL  (3 * MR18_KEYS_POLL_INTERVAL)
 
-#define MR18_WAN_PHYMASK    BIT(0)
+#define MR18_WAN_PHYMASK    BIT(3)
 
 #define MR18_MAC0_OFFSET    0
 #define MR18_WMAC0_MAC_OFFSET    0x120c
@@ -126,6 +130,7 @@ static struct mtd_partition mr18_nand_flash_parts[] = {
   },
 };
 
+/*
 static struct flash_platform_data mr18_nand_flash_data = {
   .parts    = mr18_nand_flash_parts,
   .nr_parts  = ARRAY_SIZE(mr18_nand_flash_parts),
@@ -136,53 +141,37 @@ static struct platform_device mr18_nand = {
     .id = -1,
     .dev.platform_data = &mr18_nand_flash_data,
 };
+*/
 
-static struct mdio_board_info mr18_mdio0_info[] = {
-	{
-		.bus_id = "ag71xx-mdio.0",
-		.phy_addr = 0,
-	},
-};
-
-static void __init MR18_setup(void)
+static void __init mr18_setup(void)
 {
-  u8 *mac = (u8 *) KSEG1ADDR(0x1fff0000);
-
-  ath79_register_m25p80(NULL);
+  u8 *mac = (u8 *) KSEG1ADDR(0xbfff0000);
 
   /* Debug the things */
   printk("Detected Meraki MR18\n");
 
-  /* Early NIC Init */
-  ath79_eth0_pll_data.pll_1000 = 0xa6000000;
-
-  /* Enable Eth? */
   ath79_setup_qca955x_eth_cfg(QCA955X_ETH_CFG_RGMII_EN);
 
-  /* MDIO */
-  ath79_register_mdio(0, 0x0);
+  /*ath79_eth0_pll_data.pll_1000 = 0x1a000000;*/
 
-  /* Std NIC? */
+	ath79_register_mdio(0, 0x0);
+
+  /* GMAC0 is connected to an Atheros AR8035-A */
   ath79_init_mac(ath79_eth0_data.mac_addr, mac + MR18_MAC0_OFFSET, 0);
-
-  mdiobus_register_board_info(mr18_mdio0_info,
-				    ARRAY_SIZE(mr18_mdio0_info));
-
   ath79_eth0_data.phy_if_mode = PHY_INTERFACE_MODE_RGMII;
 	ath79_eth0_data.phy_mask = MR18_WAN_PHYMASK;
-  ath79_eth0_data.mii_bus_dev = &ath79_mdio0_device.dev;
+	ath79_eth0_data.mii_bus_dev = &ath79_mdio0_device.dev;
 
 	ath79_register_eth(0);
 
-  /* NAND - NFC OpenWRT Driver
-  ath79_nfc_set_ecc_mode(AR934X_NFC_ECC_SOFT);
+  /* NAND - NFC OpenWRT Driver */
+  ath79_nfc_set_ecc_mode(AR934X_NFC_ECC_HW);
   ath79_nfc_set_parts(mr18_nand_flash_parts,
                       ARRAY_SIZE(mr18_nand_flash_parts));
   ath79_register_nfc();
-  */
 
-  /* NAND - Meraki ath79 Driver */
-  platform_device_register(&mr18_nand);
+  /* NAND - Meraki ath79 Driver
+  platform_device_register(&mr18_nand); */
 
   /* Register the LED's and Buttons */
   platform_device_register(&tricolor_leds);
@@ -198,5 +187,4 @@ static void __init MR18_setup(void)
   */
 
 }
-
-MIPS_MACHINE(ATH79_MACH_MR18, "MR18", "Meraki MR18", MR18_setup);
+MIPS_MACHINE(ATH79_MACH_MR18, "MR18", "Meraki MR18", mr18_setup);
