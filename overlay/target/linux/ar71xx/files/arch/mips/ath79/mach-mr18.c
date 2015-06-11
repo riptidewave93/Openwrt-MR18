@@ -20,7 +20,6 @@
 
 #include <asm/mach-ath79/ath79.h>
 #include <asm/mach-ath79/ar71xx_regs.h>
-/* <asm/mach-ath79/ath79_nand_regs.h> */
 
 #include <linux/leds.h>
 #include <linux/leds-nu801.h>
