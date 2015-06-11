@@ -1,16 +1,3 @@
-Index: linux-3.18.14/arch/mips/ath79/mach-mr18.c
-===================================================================
---- linux-3.18.14.orig/arch/mips/ath79/mach-mr18.c
-+++ linux-3.18.14/arch/mips/ath79/mach-mr18.c
-@@ -165,7 +165,7 @@ static void __init mr18_setup(void)
- 	ath79_register_eth(0);
- 
-   /* NAND - NFC OpenWRT Driver */
--  ath79_nfc_set_ecc_mode(AR934X_NFC_ECC_HW);
-+  ath79_nfc_set_ecc_mode(AR934X_NFC_ECC_SOFT_BCH);
-   ath79_nfc_set_parts(mr18_nand_flash_parts,
-                       ARRAY_SIZE(mr18_nand_flash_parts));
-   ath79_register_nfc();
 Index: linux-3.18.14/drivers/mtd/nand/ar934x_nfc.c
 ===================================================================
 --- linux-3.18.14.orig/drivers/mtd/nand/ar934x_nfc.c
@@ -18,7 +5,7 @@ Index: linux-3.18.14/drivers/mtd/nand/ar934x_nfc.c
 @@ -1437,6 +1437,10 @@ ar934x_nfc_probe(struct platform_device
  		nand->ecc.mode = NAND_ECC_SOFT;
  		break;
- 
+
 +	case AR934X_NFC_ECC_SOFT_BCH:
 +		nand->ecc.mode = NAND_ECC_SOFT_BCH;
 +		break;
@@ -36,5 +23,5 @@ Index: linux-3.18.14/include/linux/platform/ar934x_nfc.h
  	AR934X_NFC_ECC_HW,
 +	AR934X_NFC_ECC_SOFT_BCH,
  };
- 
+
  struct ar934x_nfc_platform_data {

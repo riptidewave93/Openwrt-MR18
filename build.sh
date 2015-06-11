@@ -31,7 +31,7 @@ if [ $firstbuild = "0" ]; then
   Msg "Cleaning Builddir..."
   cd $clonedir
   rm -rf ./bin
-  make target/linux/clean
+  # make target/linux/clean
   rm -rf ./build_dir/target-mips_34kc_uClibc-0.9.33.2/linux-ar71xx*
   cd - > /dev/null
 fi

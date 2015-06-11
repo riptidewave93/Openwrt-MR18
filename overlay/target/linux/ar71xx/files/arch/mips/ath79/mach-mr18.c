@@ -2,6 +2,7 @@
  *  Cisco Meraki MR18 board support
  *
  *  Copyright (C) 2015 Chris Blake <chrisrblake93@gmail.com>
+ *  Copyright (C) 2015 Thomas Hebb <tommyhebb@gmail.com>
  *
  *  Based on Cisco Meraki GPL Release r23-20150601 MR18 Device Config
  *
@@ -54,11 +55,11 @@
 
 static struct gpio_led MR18_leds_gpio[] __initdata = {
   {
-    .name    = "mr18:power:white",
+    .name    = "mr18:white:power",
     .gpio    = MR18_GPIO_LED_POWER_WHITE,
     .active_low  = 1,
   }, {
-    .name    = "mr18:power:orange",
+    .name    = "mr18:orange:power",
     .gpio    = MR18_GPIO_LED_POWER_ORANGE,
     .active_low  = 0,
   },
@@ -76,7 +77,7 @@ static struct gpio_keys_button MR18_gpio_keys[] __initdata = {
 };
 
 static struct led_nu801_template tricolor_led_template = {
-    .name = "tricolor",
+    .name = "mr18:tricolor",
     .num_leds = 1,
     .cki = 11,
     .sdi = 12,
@@ -127,12 +128,14 @@ static struct mtd_partition mr18_nand_flash_parts[] = {
     .name  = "odm-caldata",
     .offset  = 0x7FE0000,
     .size  = 0x20000,  /* 128 KiB */
+    .mask_flags	= MTD_WRITEABLE, /* Read Only */
   },
 };
 
 static void __init mr18_setup(void)
 {
-  u8 *mac = (u8 *) KSEG1ADDR(0xbfff0000);
+  /* odm-caldata (nandbase + offset) */
+  u8 *mac = (u8 *) KSEG1ADDR(0x1b800200 + 0x7fe0000);
 
   /* Debug the things */
   printk("Detected Meraki MR18\n");
@@ -146,11 +149,10 @@ static void __init mr18_setup(void)
   ath79_eth0_data.phy_if_mode = PHY_INTERFACE_MODE_RGMII;
 	ath79_eth0_data.phy_mask = MR18_WAN_PHYMASK;
 	ath79_eth0_data.mii_bus_dev = &ath79_mdio0_device.dev;
-
 	ath79_register_eth(0);
 
   /* NAND - NFC OpenWRT Driver */
-  ath79_nfc_set_ecc_mode(AR934X_NFC_ECC_HW);
+  ath79_nfc_set_ecc_mode(AR934X_NFC_ECC_SOFT_BCH);
   ath79_nfc_set_parts(mr18_nand_flash_parts,
                       ARRAY_SIZE(mr18_nand_flash_parts));
   ath79_register_nfc();
