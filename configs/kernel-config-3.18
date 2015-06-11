@@ -2019,7 +2019,9 @@ CONFIG_HAVE_ARCH_KGDB=y
 # CONFIG_KGDB is not set
 CONFIG_EARLY_PRINTK=y
 CONFIG_CMDLINE_BOOL=y
-CONFIG_CMDLINE="console=ttyS0,115200 machtype=MR18 mtdparts=ar934x-nfc:512k(nandloader),8M(part1),8M(part2),113664k(ubi),128k@130944k(odm-caldata) rootfstype=squashfs,jffs2 noinitrd"
+#CONFIG_CMDLINE="console=ttyS0,115200 machtype=MR18 rootfstype=squashfs,jffs2 noinitrd"
+CONFIG_CMDLINE="console=ttyS0,115200 machtype=MR18 rootfstype=squashfs,jffs2 noinitrd"
+
 CONFIG_CMDLINE_OVERRIDE=y
 CONFIG_RUNTIME_DEBUG=y
 # CONFIG_SPINLOCK_TEST is not set

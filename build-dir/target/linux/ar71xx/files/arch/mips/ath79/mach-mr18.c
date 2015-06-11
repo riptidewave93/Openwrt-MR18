@@ -18,6 +18,7 @@
 #include <linux/platform/ar934x_nfc.h>
 #include <linux/ar8216_platform.h>
 
+#include <asm/mach-ath79/ath79.h>
 #include <asm/mach-ath79/ar71xx_regs.h>
 /* <asm/mach-ath79/ath79_nand_regs.h> */
 
@@ -130,19 +131,6 @@ static struct mtd_partition mr18_nand_flash_parts[] = {
   },
 };
 
-/*
-static struct flash_platform_data mr18_nand_flash_data = {
-  .parts    = mr18_nand_flash_parts,
-  .nr_parts  = ARRAY_SIZE(mr18_nand_flash_parts),
-};
-
-static struct platform_device mr18_nand = {
-    .name = "ath79-nand",
-    .id = -1,
-    .dev.platform_data = &mr18_nand_flash_data,
-};
-*/
-
 static void __init mr18_setup(void)
 {
   u8 *mac = (u8 *) KSEG1ADDR(0xbfff0000);
@@ -151,8 +139,6 @@ static void __init mr18_setup(void)
   printk("Detected Meraki MR18\n");
 
   ath79_setup_qca955x_eth_cfg(QCA955X_ETH_CFG_RGMII_EN);
-
-  /*ath79_eth0_pll_data.pll_1000 = 0x1a000000;*/
 
 	ath79_register_mdio(0, 0x0);
 
@@ -170,9 +156,6 @@ static void __init mr18_setup(void)
                       ARRAY_SIZE(mr18_nand_flash_parts));
   ath79_register_nfc();
 
-  /* NAND - Meraki ath79 Driver
-  platform_device_register(&mr18_nand); */
-
   /* Register the LED's and Buttons */
   platform_device_register(&tricolor_leds);
   ath79_register_leds_gpio(-1, ARRAY_SIZE(MR18_leds_gpio),
@@ -180,6 +163,9 @@ static void __init mr18_setup(void)
   ath79_register_gpio_keys_polled(-1, MR18_KEYS_POLL_INTERVAL,
           ARRAY_SIZE(MR18_gpio_keys),
           MR18_gpio_keys);
+
+  /* Clear RTC reset (Needed by AHB Radio) */
+  ath79_device_reset_clear(QCA955X_RESET_RTC);
 
   /* Load up PCI stuff
   ath79_register_pci();
