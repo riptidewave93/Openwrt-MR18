@@ -37,7 +37,7 @@ if [ $firstbuild = "0" ]; then
 fi
 
 Msg "Applying overlay..."
-cp -R ./build-dir/* $clonedir/
+cp -R ./overlay/* $clonedir/
 
 if [ $firstbuild = "1" ]; then
   Msg "Running first build configurations..."
