@@ -29,6 +29,7 @@ Working
 ##### MR18
   * All LED's and Reset Button!
   * NIC Shows up and detects cable
+  * NAND is Readable (still has ECC errors)
 
 
 Notice
