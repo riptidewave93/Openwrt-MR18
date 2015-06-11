@@ -16,7 +16,6 @@ Images by default will be in ./openwrt/bin/ar71xx/
 To Do
 -----
 ##### MR18
-  * Fix NAND ECC errors on non caldata partitions! (Can we base ECC on name?)
   * FIX Gigibit Ethernet NIC (Up but no data, PLL/tuneables wrong/missing)
   * Fix Wi-Fi Cal offset address's (This may be a bitch with so many interfaces)
   * Enable SysFS HW Detection (ATM mach is hardcoded into kernel cmdline)
@@ -28,8 +27,8 @@ Working
 -----
 ##### MR18
   * All LED's and Reset Button!
+  * NAND! :D
   * NIC Shows up and detects cable
-  * NAND is Readable (still has ECC errors)
 
 
 Notice
