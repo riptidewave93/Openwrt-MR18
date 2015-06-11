@@ -19,7 +19,6 @@ To Do
   * FIX Gigibit Ethernet NIC (Up but no data, PLL/tuneables wrong/missing)
   * Fix Wi-Fi Cal offset address's (This may be a bitch with so many interfaces)
   * Enable SysFS HW Detection (ATM mach is hardcoded into kernel cmdline)
-  * Enable Base System configuration (LAN/LED System Configs)
   * Enable/Figure Out Sysupgrade
   * Create Image Build Scripts (So we can stop using the default elf binaries)
   * Fix bootloader issue (U-Boot? Hard coded images? new/port driver to parse Cisco crap?)
@@ -31,6 +30,7 @@ Working
   * All LED's and Reset Button!
   * NAND! :D
   * NIC Shows up and detects cable
+  * Sysfs Integration
 
 
 Notice
