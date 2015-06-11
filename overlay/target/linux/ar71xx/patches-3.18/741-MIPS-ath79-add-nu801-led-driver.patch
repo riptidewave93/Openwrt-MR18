@@ -16,7 +16,7 @@
  	depends on LEDS_CLASS
 --- a/drivers/leds/leds-nu801.c
 +++ b/drivers/leds/leds-nu801.c
-@@ -0,0 +1,391 @@
+@@ -0,0 +1,393 @@
 +/*
 + * LED driver for NU801
 + *
@@ -61,6 +61,7 @@
 +	struct delayed_work work;
 +	struct led_nu801_led_data *led_chain;
 +	int num_leds;
++	const char *device_name;
 +	const char *name;
 +	u32 ndelay;
 +	atomic_t pending;
@@ -128,9 +129,9 @@
 +	struct led_nu801_led_data *led = &controller->led_chain[index];
 +	int ret;
 +
-+	scnprintf(led->name, sizeof(led->name), "%s%d:%s",
-+		  controller->name,
-+		  (controller->num_leds - (index + 1)) / NUM_COLORS, color);
++	scnprintf(led->name, sizeof(led->name), "%s:%s:%s%d",
++		  controller->device_name, color, controller->name,
++		  (controller->num_leds - (index + 1)) / NUM_COLORS);
 +	led->cdev.name = led->name;
 +	led->cdev.brightness_set = led_nu801_set;
 +#ifdef CONFIG_LEDS_TRIGGERS
@@ -162,6 +163,7 @@
 +	controller->sdi = template->sdi;
 +	controller->lei = template->lei;
 +	controller->num_leds = template->num_leds * 3;
++	controller->device_name = template->device_name;
 +	controller->name = template->name;
 +	controller->ndelay = template->ndelay;
 +	atomic_set(&controller->pending, 1);
@@ -420,7 +422,7 @@
  obj-$(CONFIG_LEDS_DAC124S085)		+= leds-dac124s085.o
  --- a/include/linux/leds-nu801.h
  +++ b/include/linux/leds-nu801.h
- @@ -0,0 +1,37 @@
+ @@ -0,0 +1,38 @@
 +#ifndef __LEDS_NU801_H__
 +#define __LEDS_NU801_H__
 +
@@ -439,6 +441,7 @@
 +#include <linux/leds.h>
 +
 +struct led_nu801_template {
++	const char *device_name;	/* Name of the platform device */
 +	const char *name;	/* Name of this LED chain */
 +	int num_leds;		/* Number of LEDs in the chain */
 +	unsigned cki;		/* GPIO pin for CKI */

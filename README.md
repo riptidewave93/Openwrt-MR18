@@ -17,12 +17,11 @@ To Do
 -----
 ##### MR18
   * FIX Gigibit Ethernet NIC (Up but no data, PLL/tuneables wrong/missing)
-  * Fix Wi-Fi Cal offset address's (This may be a bitch with so many interfaces)
+  * Fix Wi-Fi Cal offset address's (This may be a bitch to find the offset)
   * Enable SysFS HW Detection (ATM mach is hardcoded into kernel cmdline)
-  * Enable/Figure Out Sysupgrade
+  * Enable/Setup Sysupgrade
   * Create Image Build Scripts (So we can stop using the default elf binaries)
   * Fix bootloader issue (U-Boot? Hard coded images? new/port driver to parse Cisco crap?)
-  * Fixup TriColor LED Driver to follow OpenWRT sysfs standards
 
 Working
 -----

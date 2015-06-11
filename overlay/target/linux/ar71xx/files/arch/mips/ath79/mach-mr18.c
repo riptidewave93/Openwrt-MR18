@@ -77,7 +77,8 @@ static struct gpio_keys_button MR18_gpio_keys[] __initdata = {
 };
 
 static struct led_nu801_template tricolor_led_template = {
-    .name = "mr18:tricolor",
+    .device_name = "mr18",
+    .name = "tricolor",
     .num_leds = 1,
     .cki = 11,
     .sdi = 12,
