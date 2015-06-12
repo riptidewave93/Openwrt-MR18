@@ -129,7 +129,7 @@ static struct mtd_partition mr18_nand_flash_parts[] = {
     .name  = "odm-caldata",
     .offset  = 0x7FE0000,
     .size  = 0x20000,  /* 128 KiB */
-    .mask_flags	= MTD_WRITEABLE, /* Read Only */
+    .mask_flags = MTD_WRITEABLE, /* Read Only */
   },
 };
 
@@ -140,14 +140,14 @@ static void __init mr18_setup(void)
 
   ath79_setup_qca955x_eth_cfg(QCA955X_ETH_CFG_RGMII_EN);
 
-	ath79_register_mdio(0, 0x0);
+  ath79_register_mdio(0, 0x0);
 
   /* GMAC0 is connected to an Atheros AR8035-A */
   ath79_init_mac(ath79_eth0_data.mac_addr, mac + MR18_MAC0_OFFSET, 0);
   ath79_eth0_data.phy_if_mode = PHY_INTERFACE_MODE_RGMII;
-	ath79_eth0_data.phy_mask = MR18_WAN_PHYMASK;
-	ath79_eth0_data.mii_bus_dev = &ath79_mdio0_device.dev;
-	ath79_register_eth(0);
+  ath79_eth0_data.phy_mask = MR18_WAN_PHYMASK;
+  ath79_eth0_data.mii_bus_dev = &ath79_mdio0_device.dev;
+  ath79_register_eth(0);
 
   /* NAND */
   ath79_nfc_set_ecc_mode(AR934X_NFC_ECC_SOFT_BCH);
@@ -158,7 +158,7 @@ static void __init mr18_setup(void)
   /* LEDs and Buttons */
   platform_device_register(&tricolor_leds);
   ath79_register_leds_gpio(-1, ARRAY_SIZE(MR18_leds_gpio),
-           MR18_leds_gpio);
+          MR18_leds_gpio);
   ath79_register_gpio_keys_polled(-1, MR18_KEYS_POLL_INTERVAL,
           ARRAY_SIZE(MR18_gpio_keys),
           MR18_gpio_keys);
