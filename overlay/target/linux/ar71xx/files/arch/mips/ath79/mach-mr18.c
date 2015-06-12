@@ -136,10 +136,7 @@ static struct mtd_partition mr18_nand_flash_parts[] = {
 static void __init mr18_setup(void)
 {
   /* odm-caldata (nandbase + offset) */
-  u8 *mac = (u8 *) KSEG1ADDR(0x1b800200 + 0x7fe0000);
-
-  /* Debug the things */
-  printk("Detected Meraki MR18\n");
+  u8 *mac = (u8 *) KSEG1ADDR(0x237e0000);
 
   ath79_setup_qca955x_eth_cfg(QCA955X_ETH_CFG_RGMII_EN);
 
@@ -152,13 +149,13 @@ static void __init mr18_setup(void)
 	ath79_eth0_data.mii_bus_dev = &ath79_mdio0_device.dev;
 	ath79_register_eth(0);
 
-  /* NAND - NFC OpenWRT Driver */
+  /* NAND */
   ath79_nfc_set_ecc_mode(AR934X_NFC_ECC_SOFT_BCH);
   ath79_nfc_set_parts(mr18_nand_flash_parts,
                       ARRAY_SIZE(mr18_nand_flash_parts));
   ath79_register_nfc();
 
-  /* Register the LED's and Buttons */
+  /* LEDs and Buttons */
   platform_device_register(&tricolor_leds);
   ath79_register_leds_gpio(-1, ARRAY_SIZE(MR18_leds_gpio),
            MR18_leds_gpio);
@@ -169,10 +166,9 @@ static void __init mr18_setup(void)
   /* Clear RTC reset (Needed by AHB Radio) */
   ath79_device_reset_clear(QCA955X_RESET_RTC);
 
-  /* Load up PCI stuff
-  ath79_register_pci();
-  ath79_register_wmac(mac + MR18_WMAC0_MAC_OFFSET, NULL);
-  */
+  /* Load up WiFi - Needs more work */
+  ath79_register_wmac(mac + MR18_CALDATA0_OFFSET,NULL);
+  ap91_pci_init(mac + MR18_CALDATA1_OFFSET,NULL);
 
 }
 MIPS_MACHINE(ATH79_MACH_MR18, "MR18", "Meraki MR18", mr18_setup);
