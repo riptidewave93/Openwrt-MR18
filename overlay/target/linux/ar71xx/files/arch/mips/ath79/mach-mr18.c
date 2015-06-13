@@ -13,6 +13,7 @@
 
 #include <linux/platform_device.h>
 #include <linux/ath9k_platform.h>
+#include <linux/pci.h>
 #include <linux/mtd/mtd.h>
 #include <linux/mtd/nand.h>
 #include <linux/mtd/partitions.h>
@@ -135,12 +136,15 @@ static struct mtd_partition mr18_nand_flash_parts[] = {
 
 static void __init mr18_setup(void)
 {
-  /* odm-caldata (nandbase + offset) */
+  /* odm-caldata ((nandbase - 200(ECC/BCH Headers)) + offset) */
   u8 *mac = (u8 *) KSEG1ADDR(0x237e0000);
-
-  ath79_setup_qca955x_eth_cfg(QCA955X_ETH_CFG_RGMII_EN);
+  print_hex_dump(KERN_INFO, "raw data for mac: ", DUMP_PREFIX_OFFSET,
+                     16, 1, mac, sizeof(mac), 1);
 
 	ath79_register_mdio(0, 0x0);
+
+  /* Setup SoC Phy mode */
+  ath79_setup_qca955x_eth_cfg(QCA955X_ETH_CFG_RGMII_EN);
 
   /* GMAC0 is connected to an Atheros AR8035-A */
   ath79_init_mac(ath79_eth0_data.mac_addr, mac + MR18_MAC0_OFFSET, 0);
@@ -167,8 +171,10 @@ static void __init mr18_setup(void)
   ath79_device_reset_clear(QCA955X_RESET_RTC);
 
   /* Load up WiFi - Needs more work */
-  ath79_register_wmac(mac + MR18_CALDATA0_OFFSET,NULL);
-  ap91_pci_init(mac + MR18_CALDATA1_OFFSET,NULL);
+  /*ath79_register_pci();*/
+  ath79_register_wmac(mac + MR18_CALDATA0_OFFSET, NULL);
+  /*ap94_pci_init(mac + MR18_CALDATA1_OFFSET, NULL,
+          mac + MR18_CALDATA2_OFFSET, NULL);*/
 
 }
 MIPS_MACHINE(ATH79_MACH_MR18, "MR18", "Meraki MR18", mr18_setup);
