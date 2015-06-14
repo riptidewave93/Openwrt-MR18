@@ -24,7 +24,7 @@ if [ ! -d $clonedir ]; then
   Msg "Cloning Repo..."
   git clone git://git.openwrt.org/openwrt.git $clonedir
   cd $clonedir
-  git reset --hard b14a040e0d99b81b75820e90aff0f943d9bde167
+  git reset --hard aad9b4b861c3ebceaf4fee6c5764a33c4b27621b
   cd - > /dev/null
 fi
 
@@ -36,6 +36,8 @@ fi
 
 if [ $firstbuild = "0" ]; then
   Msg "Cleaning Builddir..."
+  rm ./openwrt-ar71xx-nand-vmlinux-initramfs-nandloader-part1.bin 2> /dev/null
+  rm ./openwrt-ar71xx-nand-vmlinux-initramfs.elf 2> /dev/null
   cd $clonedir
   rm -rf ./bin
   # make target/linux/clean
@@ -95,7 +97,7 @@ if [ $modify -eq 1 ]; then
   fi
 fi
 
-if [ -d $clonedir/bin/ar71xx/ ]; then
+if [ -e $clonedir/bin/ar71xx/openwrt-ar71xx-nand-vmlinux-initramfs.bin ]; then
   Msg "Generating Nandloader Image"
   # Change to device image once we get the platform in makefile setup
   $partbuilderdir/partbuilder.sh $clonedir/bin/ar71xx/openwrt-ar71xx-nand-vmlinux-initramfs.bin ./openwrt-ar71xx-nand-vmlinux-initramfs-nandloader-part1.bin
