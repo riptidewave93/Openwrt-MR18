@@ -138,8 +138,9 @@ static void __init mr18_setup(void)
 {
   /* odm-caldata ((nandbase - 200(ECC/BCH Headers)) + offset) */
   u8 *mac = (u8 *) KSEG1ADDR(0x237e0000);
+  u32 *dev = (u32 *) KSEG1ADDR(0x237e0000);
   print_hex_dump(KERN_INFO, "raw data for mac: ", DUMP_PREFIX_OFFSET,
-                     16, 1, mac, sizeof(mac), 1);
+                     16, 1, dev, sizeof(dev), 1);
 
 	ath79_register_mdio(0, 0x0);
 

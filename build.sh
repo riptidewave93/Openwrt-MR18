@@ -2,6 +2,7 @@
 
 firstbuild=0
 clonedir=./openwrt
+partbuilderdir=./meraki-partbuilder
 cpu_num=$(grep -c processor /proc/cpuinfo)
 
 # Print messages in cyan blue
@@ -18,13 +19,19 @@ fi
 
 Msg "Starting Build Process!"
 
-if [ ! -d $clonedir ] ; then
+if [ ! -d $clonedir ]; then
   firstbuild=1
   Msg "Cloning Repo..."
   git clone git://git.openwrt.org/openwrt.git $clonedir
   cd $clonedir
   git reset --hard b14a040e0d99b81b75820e90aff0f943d9bde167
   cd - > /dev/null
+fi
+
+if [ ! -d $partbuilderdir ]; then
+  Msg "Cloning Nandloader Image Builder..."
+  git clone https://github.com/riptidewave93/meraki-partbuilder.git $partbuilderdir
+  chmod +x $partbuilderdir/partbuilder.sh
 fi
 
 if [ $firstbuild = "0" ]; then
@@ -75,7 +82,7 @@ Msg "Building Time!!!"
 cd $clonedir
 make -j$cpu_num V=s
 cd - > /dev/null
-Msg "Build Complete!"
+Msg "Compile Complete!"
 
 if [ $modify -eq 1 ]; then
   Msg "Would you like to save your new configurations to the configs folder?"
@@ -87,3 +94,12 @@ if [ $modify -eq 1 ]; then
     cp $clonedir/target/linux/ar71xx/config-3.18 ./configs/kernel-config-3.18
   fi
 fi
+
+Msg "Generating Nandloader Image"
+# Change to device image once we get the platform in makefile setup
+$partbuilderdir/partbuilder.sh $clonedir/bin/ar71xx/openwrt-ar71xx-nand-vmlinux-initramfs.bin ./openwrt-ar71xx-nand-vmlinux-initramfs-nandloader-part1.bin
+
+Msg "Moving Images to Local Dir..."
+cp $clonedir/bin/ar71xx/openwrt-ar71xx-nand-vmlinux-initramfs.elf ./
+
+Msg "Build.sh Finished!"
