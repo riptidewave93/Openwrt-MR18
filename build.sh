@@ -95,11 +95,13 @@ if [ $modify -eq 1 ]; then
   fi
 fi
 
-Msg "Generating Nandloader Image"
-# Change to device image once we get the platform in makefile setup
-$partbuilderdir/partbuilder.sh $clonedir/bin/ar71xx/openwrt-ar71xx-nand-vmlinux-initramfs.bin ./openwrt-ar71xx-nand-vmlinux-initramfs-nandloader-part1.bin
+if [ -d $clonedir/bin/ar71xx/ ]; then
+  Msg "Generating Nandloader Image"
+  # Change to device image once we get the platform in makefile setup
+  $partbuilderdir/partbuilder.sh $clonedir/bin/ar71xx/openwrt-ar71xx-nand-vmlinux-initramfs.bin ./openwrt-ar71xx-nand-vmlinux-initramfs-nandloader-part1.bin
 
-Msg "Moving Images to Local Dir..."
-cp $clonedir/bin/ar71xx/openwrt-ar71xx-nand-vmlinux-initramfs.elf ./
+  Msg "Moving Images to Local Dir..."
+  cp $clonedir/bin/ar71xx/openwrt-ar71xx-nand-vmlinux-initramfs.elf ./
+fi
 
 Msg "Build.sh Finished!"
