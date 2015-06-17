@@ -10,14 +10,13 @@
  *  under the terms of the GNU General Public License version 2 as published
  *  by the Free Software Foundation.
  */
-
-#include <linux/platform_device.h>
-#include <linux/ath9k_platform.h>
 #include <linux/pci.h>
 #include <linux/mtd/mtd.h>
 #include <linux/mtd/nand.h>
 #include <linux/mtd/partitions.h>
 #include <linux/platform/ar934x_nfc.h>
+#include <linux/platform_device.h>
+#include <linux/ath9k_platform.h>
 #include <linux/ar8216_platform.h>
 
 #include <asm/mach-ath79/ath79.h>
@@ -27,12 +26,12 @@
 #include <linux/leds-nu801.h>
 
 #include "common.h"
-#include "pci.h"
-#include "dev-ap9x-pci.h"
 #include "dev-gpio-buttons.h"
 #include "dev-eth.h"
 #include "dev-leds-gpio.h"
 #include "dev-nfc.h"
+#include "pci.h"
+#include "dev-ap9x-pci.h"
 #include "dev-wmac.h"
 #include "machtypes.h"
 
@@ -46,13 +45,17 @@
 #define MR18_WAN_PHYMASK    BIT(3)
 
 #define MR18_MAC0_OFFSET    0
-#define MR18_WMAC0_MAC_OFFSET    0x120c
-#define MR18_WMAC1_MAC_OFFSET    0x520c
-#define MR18_WMAC2_MAC_OFFSET    0x920c
+#define MR18_WLAN0_MAC_OFFSET    0x120c
+#define MR18_WLAN1_MAC_OFFSET    0x520c
+#define MR18_WLAN2_MAC_OFFSET    0x920c
 
-#define MR18_CALDATA0_OFFSET    0x1000
-#define MR18_CALDATA1_OFFSET    0x5000
-#define MR18_CALDATA2_OFFSET    0x9000
+#define MR18_WLAN0_CALDATA_OFFSET    0x1000
+#define MR18_WLAN1_CALDATA_OFFSET    0x5000
+#define MR18_WLAN2_CALDATA_OFFSET    0x9000
+
+static struct ath9k_platform_data mr18_ath9k_wlan0_caldata;
+static struct ath9k_platform_data mr18_ath9k_wlan1_caldata;
+static struct ath9k_platform_data mr18_ath9k_wlan2_caldata;
 
 static struct gpio_led MR18_leds_gpio[] __initdata = {
   {
@@ -137,10 +140,7 @@ static struct mtd_partition mr18_nand_flash_parts[] = {
 static void __init mr18_setup(void)
 {
   /* odm-caldata ((nandbase - 200(ECC/BCH Headers)) + offset) */
-  u8 *mac = (u8 *) KSEG1ADDR(0x237e0000);
-  u32 *dev = (u32 *) KSEG1ADDR(0x237e0000);
-  print_hex_dump(KERN_INFO, "raw data for mac: ", DUMP_PREFIX_OFFSET,
-                     16, 1, dev, sizeof(dev), 1);
+  /* u8 *mac = (u8 *) KSEG1ADDR(0x237e0000); */
 
   ath79_register_mdio(0, 0x0);
 
@@ -148,7 +148,7 @@ static void __init mr18_setup(void)
   ath79_setup_qca955x_eth_cfg(QCA955X_ETH_CFG_RGMII_EN);
 
   /* GMAC0 is connected to an Atheros AR8035-A */
-  ath79_init_mac(ath79_eth0_data.mac_addr, mac + MR18_MAC0_OFFSET, 0);
+  ath79_init_mac(ath79_eth0_data.mac_addr, NULL, 0);
   ath79_eth0_data.phy_if_mode = PHY_INTERFACE_MODE_RGMII;
   ath79_eth0_data.phy_mask = MR18_WAN_PHYMASK;
   ath79_eth0_data.mii_bus_dev = &ath79_mdio0_device.dev;
@@ -168,14 +168,18 @@ static void __init mr18_setup(void)
           ARRAY_SIZE(MR18_gpio_keys),
           MR18_gpio_keys);
 
+  /* Load up caldata into vars now that nand is up */
+  ath79_get_nand_caldata(&mr18_ath9k_wlan0_caldata, "odm-caldata", MR18_WLAN0_CALDATA_OFFSET);
+  ath79_get_nand_caldata(&mr18_ath9k_wlan1_caldata, "odm-caldata", MR18_WLAN1_CALDATA_OFFSET);
+  ath79_get_nand_caldata(&mr18_ath9k_wlan2_caldata, "odm-caldata", MR18_WLAN2_CALDATA_OFFSET);
+
   /* Clear RTC reset (Needed by AHB Radio) */
   ath79_device_reset_clear(QCA955X_RESET_RTC);
 
   /* Load up WiFi - Needs more work */
-  /*ath79_register_pci();*/
-  ath79_register_wmac(mac + MR18_CALDATA0_OFFSET, NULL);
-  /*ap94_pci_init(mac + MR18_CALDATA1_OFFSET, NULL,
-          mac + MR18_CALDATA2_OFFSET, NULL);*/
+  ath79_register_wmac((u8 *)mr18_ath9k_wlan0_caldata.eeprom_data, NULL);
+  ap94_pci_init((u8 *)mr18_ath9k_wlan1_caldata.eeprom_data, NULL,
+                (u8 *)mr18_ath9k_wlan2_caldata.eeprom_data, NULL);
 
 }
 MIPS_MACHINE(ATH79_MACH_MR18, "MR18", "Meraki MR18", mr18_setup);
