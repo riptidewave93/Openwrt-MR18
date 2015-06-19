@@ -17,6 +17,7 @@ To Do
 -----
 ##### MR18
   * FIX Gigibit Ethernet NIC (Up but no data, PLL/tuneables wrong/missing)
+  * Fixup WiFi
   * Fix Wi-Fi Cal offset address's (This may be a bitch to find the offset)
   * Enable SysFS HW Detection (ATM mach is hardcoded into kernel cmdline)
   * Enable/Setup Sysupgrade
@@ -26,10 +27,11 @@ To Do
 Working
 -----
 ##### MR18
-  * All LED's and Reset Button!
-  * NAND! :D
+  * All LED's and Reset Button
+  * NAND
   * NIC Shows up and detects cable
   * Sysfs Integration
+  * Nandloader bootable images
 
 
 Notice

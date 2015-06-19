@@ -108,40 +108,12 @@ static struct platform_device tricolor_leds = {
     .dev.platform_data = &tricolor_led_data,
 };
 
-static struct mtd_partition mr18_nand_flash_parts[] = {
-  {
-    .name  = "nandloader",
-    .offset = 0x00000000,
-    .size  = 0x00080000,   /* 512 KiB  */
-  },
-  {
-    .name  = "part1",
-    .offset  = 0x00080000,
-    .size  = 0x00800000,   /* 8192 KiB */
-  },
-  {
-    .name  = "part2",
-    .offset  = 0x00880000,
-    .size  = 0x00800000,   /* 8192 KiB */
-  },
-  {
-    .name  = "ubi",
-    .offset  = 0x01080000,
-    .size  = 0x6F00000,  /* 113664 KiB */
-  },
-  {
-    .name  = "odm-caldata",
-    .offset  = 0x7FE0000,
-    .size  = 0x20000,  /* 128 KiB */
-    .mask_flags = MTD_WRITEABLE, /* Read Only */
-  },
-};
-
 static void __init mr18_setup(void)
 {
   /* odm-caldata ((nandbase - 200(ECC/BCH Headers)) + offset) */
   /* u8 *mac = (u8 *) KSEG1ADDR(0x237e0000); */
 
+  /* MDIO Interface */
   ath79_register_mdio(0, 0x0);
 
   /* Setup SoC Phy mode */
@@ -156,8 +128,6 @@ static void __init mr18_setup(void)
 
   /* NAND */
   ath79_nfc_set_ecc_mode(AR934X_NFC_ECC_SOFT_BCH);
-  ath79_nfc_set_parts(mr18_nand_flash_parts,
-                      ARRAY_SIZE(mr18_nand_flash_parts));
   ath79_register_nfc();
 
   /* LEDs and Buttons */
