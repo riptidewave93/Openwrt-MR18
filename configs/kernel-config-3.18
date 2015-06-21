@@ -183,14 +183,14 @@ CONFIG_ATH79_MACH_MR18=y
 # CONFIG_SOC_QCA953X is not set
 CONFIG_SOC_QCA955X=y
 # CONFIG_SOC_QCA956X is not set
-# CONFIG_ATH79_DEV_M25P80 is not set
+CONFIG_ATH79_DEV_M25P80=y
 CONFIG_ATH79_DEV_AP9X_PCI=y
 # CONFIG_ATH79_DEV_DSA is not set
 CONFIG_ATH79_DEV_ETH=y
 CONFIG_ATH79_DEV_GPIO_BUTTONS=y
 CONFIG_ATH79_DEV_LEDS_GPIO=y
 CONFIG_ATH79_DEV_NFC=y
-# CONFIG_ATH79_DEV_SPI is not set
+CONFIG_ATH79_DEV_SPI=y
 # CONFIG_ATH79_DEV_USB is not set
 CONFIG_ATH79_DEV_WMAC=y
 # CONFIG_ATH79_NVRAM is not set
@@ -852,7 +852,7 @@ CONFIG_MTD_COMPLEX_MAPPINGS=y
 #
 # CONFIG_MTD_PMC551 is not set
 # CONFIG_MTD_DATAFLASH is not set
-# CONFIG_MTD_M25P80 is not set
+CONFIG_MTD_M25P80=y
 # CONFIG_MTD_SST25L is not set
 # CONFIG_MTD_SLRAM is not set
 CONFIG_MTD_PHRAM=y
@@ -2028,7 +2028,7 @@ CONFIG_HAVE_ARCH_KGDB=y
 # CONFIG_KGDB is not set
 CONFIG_EARLY_PRINTK=y
 CONFIG_CMDLINE_BOOL=y
-CONFIG_CMDLINE="console=ttyS0,115200 machtype=MR18 ubi.mtd=3 mtdparts=ar934x-nfc:512k(nandloader)ro,8M(part1),8M(part2),113664k(ubi),128k@130944k(odm-caldata)ro rootfstype=squashfs,jffs2 noinitrd"
+CONFIG_CMDLINE="console=ttyS0,115200 machtype=MR18 mtdparts=spi0.0:512k(art),-(unused);ar934x-nfc:512k(nandloader)ro,8M(part1),8M(part2),113664k(ubi),128k@130944k(odm-caldata)ro rootfstype=squashfs,jffs2 noinitrd"
 CONFIG_CMDLINE_OVERRIDE=y
 CONFIG_RUNTIME_DEBUG=y
 # CONFIG_SPINLOCK_TEST is not set

@@ -17,7 +17,7 @@
 #include <linux/platform/ar934x_nfc.h>
 #include <linux/platform_device.h>
 #include <linux/ath9k_platform.h>
-#include <linux/ar8216_platform.h>
+#include <linux/platform_data/phy-at803x.h>
 
 #include <asm/mach-ath79/ath79.h>
 #include <asm/mach-ath79/ar71xx_regs.h>
@@ -26,11 +26,12 @@
 #include <linux/leds-nu801.h>
 
 #include "common.h"
+#include "pci.h"
 #include "dev-gpio-buttons.h"
 #include "dev-eth.h"
 #include "dev-leds-gpio.h"
 #include "dev-nfc.h"
-#include "pci.h"
+#include "dev-m25p80.h"
 #include "dev-ap9x-pci.h"
 #include "dev-wmac.h"
 #include "machtypes.h"
@@ -53,9 +54,10 @@
 #define MR18_WLAN1_CALDATA_OFFSET    0x5000
 #define MR18_WLAN2_CALDATA_OFFSET    0x9000
 
+/*
 static struct ath9k_platform_data mr18_ath9k_wlan0_caldata;
 static struct ath9k_platform_data mr18_ath9k_wlan1_caldata;
-static struct ath9k_platform_data mr18_ath9k_wlan2_caldata;
+static struct ath9k_platform_data mr18_ath9k_wlan2_caldata; */
 
 static struct gpio_led MR18_leds_gpio[] __initdata = {
   {
@@ -108,22 +110,46 @@ static struct platform_device tricolor_leds = {
     .dev.platform_data = &tricolor_led_data,
 };
 
+static struct at803x_platform_data mr18_at803x_data = {
+    .disable_smarteee = 1,
+  	.enable_rgmii_rx_delay = 1,
+  	.enable_rgmii_tx_delay = 1,
+};
+
+static struct mdio_board_info mr18_mdio0_info[] = {
+	{
+		.bus_id = "ag71xx-mdio.0",
+		.phy_addr = MR18_WAN_PHYMASK,
+		.platform_data = &mr18_at803x_data,
+	},
+};
+
 static void __init mr18_setup(void)
 {
   /* odm-caldata ((nandbase - 200(ECC/BCH Headers)) + offset) */
   /* u8 *mac = (u8 *) KSEG1ADDR(0x237e0000); */
+  u8 *mac = (u8 *) KSEG1ADDR(0x1f000000);
 
-  /* MDIO Interface */
-  ath79_register_mdio(0, 0x0);
+  /* SPI */
+  ath79_register_m25p80(NULL);
 
   /* Setup SoC Phy mode */
   ath79_setup_qca955x_eth_cfg(QCA955X_ETH_CFG_RGMII_EN);
+
+  /* MDIO Interface */
+  ath79_register_mdio(0, 0x0);
+  mdiobus_register_board_info(mr18_mdio0_info,
+				                      ARRAY_SIZE(mr18_mdio0_info));
 
   /* GMAC0 is connected to an Atheros AR8035-A */
   ath79_init_mac(ath79_eth0_data.mac_addr, NULL, 0);
   ath79_eth0_data.phy_if_mode = PHY_INTERFACE_MODE_RGMII;
   ath79_eth0_data.phy_mask = MR18_WAN_PHYMASK;
   ath79_eth0_data.mii_bus_dev = &ath79_mdio0_device.dev;
+  /* ath79_eth0_pll_data.pll_1000 = 0x1a000000; */
+  ath79_eth0_pll_data.pll_10 = 0x81001313;
+	ath79_eth0_pll_data.pll_100 = 0x81000101;
+	ath79_eth0_pll_data.pll_1000 = 0x8f000000;
   ath79_register_eth(0);
 
   /* NAND */
@@ -138,18 +164,21 @@ static void __init mr18_setup(void)
           ARRAY_SIZE(MR18_gpio_keys),
           MR18_gpio_keys);
 
-  /* Load up caldata into vars now that nand is up */
-  ath79_get_nand_caldata(&mr18_ath9k_wlan0_caldata, "odm-caldata", MR18_WLAN0_CALDATA_OFFSET);
-  ath79_get_nand_caldata(&mr18_ath9k_wlan1_caldata, "odm-caldata", MR18_WLAN1_CALDATA_OFFSET);
-  ath79_get_nand_caldata(&mr18_ath9k_wlan2_caldata, "odm-caldata", MR18_WLAN2_CALDATA_OFFSET);
-
   /* Clear RTC reset (Needed by AHB Radio) */
   ath79_device_reset_clear(QCA955X_RESET_RTC);
 
-  /* Load up WiFi - Needs more work */
-  ath79_register_wmac((u8 *)mr18_ath9k_wlan0_caldata.eeprom_data, NULL);
-  ap94_pci_init((u8 *)mr18_ath9k_wlan1_caldata.eeprom_data, NULL,
-                (u8 *)mr18_ath9k_wlan2_caldata.eeprom_data, NULL);
+  /* Load up WiFi using SPI caldata */
+  ath79_register_wmac(mac + MR18_WLAN0_CALDATA_OFFSET, NULL);
+  ap91_pci_init(mac + MR18_WLAN1_CALDATA_OFFSET, NULL);/* We only need this once! */
 
+  /* Load up caldata into vars now that nand is up */
+  /*ath79_get_nand_caldata(&mr18_ath9k_wlan0_caldata, "odm-caldata", MR18_WLAN0_CALDATA_OFFSET);
+  ath79_get_nand_caldata(&mr18_ath9k_wlan1_caldata, "odm-caldata", MR18_WLAN1_CALDATA_OFFSET);
+  ath79_get_nand_caldata(&mr18_ath9k_wlan2_caldata, "odm-caldata", MR18_WLAN2_CALDATA_OFFSET); */
+
+  /* Load up WiFi - Needs more work */
+  /* ath79_register_wmac((u8 *)mr18_ath9k_wlan0_caldata.eeprom_data, NULL);
+  ap94_pci_init((u8 *)mr18_ath9k_wlan1_caldata.eeprom_data, NULL,
+                  (u8 *)mr18_ath9k_wlan2_caldata.eeprom_data, NULL); */
 }
 MIPS_MACHINE(ATH79_MACH_MR18, "MR18", "Meraki MR18", mr18_setup);

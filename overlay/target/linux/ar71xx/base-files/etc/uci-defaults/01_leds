@@ -195,7 +195,7 @@ mr16)
 	;;
 
 mr18)
-	ucidef_set_led_wlan "wlan1" "WLAN1" "mr18:blue:tricolor0" "phy0assoc"
+	ucidef_set_led_netdev "wlan1" "WLAN1" "mr18:blue:tricolor0" "wlan0"
 	;;
 
 mr600)

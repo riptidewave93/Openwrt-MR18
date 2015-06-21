@@ -11,28 +11,28 @@ Building
 #### Modify Configs and Build
 `./build.sh modify`
 
-Images by default will be in ./openwrt/bin/ar71xx/
+Images by default will be moved to the root dir of the repo.
 
 To Do
 -----
 ##### MR18
-  * FIX Gigibit Ethernet NIC (Up but no data, PLL/tuneables wrong/missing)
-  * Fixup WiFi
-  * Fix Wi-Fi Cal offset address's (This may be a bitch to find the offset)
-  * Enable SysFS HW Detection (ATM mach is hardcoded into kernel cmdline)
+  * Fixup WiFi caldata to work on NAND (Research how other OpenWRT devices do it)
   * Enable/Setup Sysupgrade
+  * Fixup Ethernet (Seems our PHY chip has its own mido requirements, needs more research)
   * Create Image Build Scripts (So we can stop using the default elf binaries)
-  * Fix bootloader issue (U-Boot? Hard coded images? new/port driver to parse Cisco crap?)
+  * Determine/Fixup default LED settings
+  * Move LED Driver to device driver instead of kernel patch
+  * Fix/plan bootloader approach (U-Boot? Hard coded images? new/port driver to parse Cisco crap?)
 
 Working
 -----
 ##### MR18
   * All LED's and Reset Button
+  * SPI Flash Storage
+  * WiFi (When caldata is on SPI)
   * NAND
-  * NIC Shows up and detects cable
   * Sysfs Integration
   * Nandloader bootable images
-
 
 Notice
 ------
