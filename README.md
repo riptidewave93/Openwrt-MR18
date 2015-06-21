@@ -11,25 +11,23 @@ Building
 #### Modify Configs and Build
 `./build.sh modify`
 
-Images by default will be moved to the root dir of the repo.
+Images by default will be moved to the root dir of the repo. Plan to build nandloader images for public drop.
 
 To Do
 -----
 ##### MR18
-  * Fixup WiFi caldata to work on NAND (Research how other OpenWRT devices do it)
   * Enable/Setup Sysupgrade
   * Fixup Ethernet (Seems our PHY chip has its own mido requirements, needs more research)
   * Create Image Build Scripts (So we can stop using the default elf binaries)
   * Determine/Fixup default LED settings
   * Move LED Driver to device driver instead of kernel patch
-  * Fix/plan bootloader approach (U-Boot? Hard coded images? new/port driver to parse Cisco crap?)
 
 Working
 -----
 ##### MR18
   * All LED's and Reset Button
   * SPI Flash Storage
-  * WiFi (When caldata is on SPI)
+  * WiFi
   * NAND
   * Sysfs Integration
   * Nandloader bootable images
