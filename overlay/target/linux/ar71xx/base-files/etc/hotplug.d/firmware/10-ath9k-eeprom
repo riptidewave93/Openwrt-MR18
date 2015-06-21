@@ -38,7 +38,7 @@ board=$(ar71xx_board_name)
 case "$FIRMWARE" in
 "soc_wmac.eeprom")
 	case $board in
-  mr18 | \
+	mr18 | \
 	r6100 | \
 	wndr3700v4 | \
 	wndr4300)
@@ -53,7 +53,7 @@ case "$FIRMWARE" in
 
 "pci_wmac0.eeprom")
 	case $board in
-  mr18 | \
+	mr18 | \
 	wndr3700v4 | \
 	wndr4300)
 		ath9k_eeprom_extract "caldata" 20480 2048
