@@ -37,7 +37,7 @@
 #define MR18_KEYS_POLL_INTERVAL    20  /* msecs */
 #define MR18_KEYS_DEBOUNCE_INTERVAL  (3 * MR18_KEYS_POLL_INTERVAL)
 
-#define MR18_WAN_PHYMASK    BIT(3)
+#define MR18_WAN_PHYMASK    3
 
 static struct gpio_led MR18_leds_gpio[] __initdata = {
   {
@@ -92,8 +92,6 @@ static struct platform_device tricolor_leds = {
 
 static struct at803x_platform_data mr18_at803x_data = {
     .disable_smarteee = 1,
-  	.enable_rgmii_rx_delay = 0,
-  	.enable_rgmii_tx_delay = 1,
 };
 
 static struct mdio_board_info mr18_mdio0_info[] = {
@@ -112,14 +110,13 @@ static void __init mr18_setup(void)
   /* MDIO Interface */
   ath79_register_mdio(0, 0x0);
   mdiobus_register_board_info(mr18_mdio0_info,
-				                      ARRAY_SIZE(mr18_mdio0_info));
+                              ARRAY_SIZE(mr18_mdio0_info));
 
   /* GMAC0 is connected to an Atheros AR8035-A */
   ath79_init_mac(ath79_eth0_data.mac_addr, NULL, 0);
   ath79_eth0_data.phy_if_mode = PHY_INTERFACE_MODE_RGMII;
-  ath79_eth0_data.phy_mask = MR18_WAN_PHYMASK;
+  ath79_eth0_data.phy_mask = BIT(MR18_WAN_PHYMASK);
   ath79_eth0_data.mii_bus_dev = &ath79_mdio0_device.dev;
-  ath79_eth0_pll_data.pll_1000 = 0x1a000000;
   ath79_register_eth(0);
 
   /* NAND */
@@ -134,10 +131,10 @@ static void __init mr18_setup(void)
           ARRAY_SIZE(MR18_gpio_keys),
           MR18_gpio_keys);
 
-  /* Clear RTC reset (Needed by AHB Radio) */
+  /* Clear RTC reset (Needed by SoC WiFi) */
   ath79_device_reset_clear(QCA955X_RESET_RTC);
 
-  /* Load up WiFi using NAND helper */
+  /* WiFi */
   ath79_register_wmac_simple();
   ap91_pci_init_simple();
 }

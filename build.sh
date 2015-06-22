@@ -24,7 +24,7 @@ if [ ! -d $clonedir ]; then
   Msg "Cloning Repo..."
   git clone git://git.openwrt.org/openwrt.git $clonedir
   cd $clonedir
-  git reset --hard aad9b4b861c3ebceaf4fee6c5764a33c4b27621b
+  git reset --hard b8455a82b58c8ed16b0fc6742b00de6fc575f0e6
   cd - > /dev/null
 fi
 
@@ -41,7 +41,7 @@ if [ $firstbuild = "0" ]; then
   cd $clonedir
   rm -rf ./bin
   # make target/linux/clean
-  rm -rf ./build_dir/target-mips_34kc_uClibc-0.9.33.2/linux-ar71xx*
+  rm -rf ./build_dir/target-mips_34kc_musl-1.1.10/linux-ar71xx_nand/linux-3*
   cd - > /dev/null
 fi
 
@@ -75,7 +75,7 @@ if [ $modify -eq 1 ]; then
   read input
   if [[ $input !=  *"n"* ]]; then
     Msg "Copying Config..."
-    cp $clonedir/build_dir/target-mips_34kc_uClibc-0.9.33.2/linux-ar71xx_nand/linux-3.18.14/.config $clonedir/target/linux/ar71xx/config-3.18
+    cp $clonedir/build_dir/target-mips_34kc_musl-1.1.10/linux-ar71xx_nand/linux-3.18.16/.config $clonedir/target/linux/ar71xx/config-3.18
     cp $clonedir/target/linux/ar71xx/config-3.18 $clonedir/target/linux/ar71xx/nand/config-default
   fi
 fi
