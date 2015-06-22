@@ -38,7 +38,10 @@ board=$(ar71xx_board_name)
 case "$FIRMWARE" in
 "soc_wmac.eeprom")
 	case $board in
-	mr18 | \
+	mr18)
+		ath9k_eeprom_extract "caldata" 4096 2048
+		ath9k_patch_firmware_mac $(mtd_get_mac_binary board-config 96)
+		;;
 	r6100 | \
 	wndr3700v4 | \
 	wndr4300)
@@ -53,7 +56,10 @@ case "$FIRMWARE" in
 
 "pci_wmac0.eeprom")
 	case $board in
-	mr18 | \
+	mr18)
+		ath9k_eeprom_extract "caldata" 20480 2048
+		ath9k_patch_firmware_mac $(mtd_get_mac_binary board-config 96)
+		;;
 	wndr3700v4 | \
 	wndr4300)
 		ath9k_eeprom_extract "caldata" 20480 2048
