@@ -1,4 +1,3 @@
-image: Openwrt-MR18
 script:
   - chmod +x ./build.sh
   - ./build.sh
