@@ -1,4 +1,8 @@
+image: dockerfile/ubuntu
 script:
+  - apt-get update
+  - apt-get install -y git-core build-essential libssl-dev libncurses5-dev unzip subversion mercurial libncurses5-dev zlib1g-dev gawk
+  - apt-get install -y git
   - chmod +x ./build.sh
   - ./build.sh
 notify:
