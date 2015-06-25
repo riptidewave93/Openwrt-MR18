@@ -1,4 +1,4 @@
-image: ubuntu
+image: bradrydzewski/base
 script:
   - apt-get update
   - apt-get install -y git-core build-essential libssl-dev libncurses5-dev unzip subversion mercurial libncurses5-dev zlib1g-dev gawk
