@@ -30,7 +30,7 @@ fi
 
 if [ ! -d $partbuilderdir ]; then
   Msg "Cloning Nandloader Image Builder..."
-  git clone https://github.com/riptidewave93/meraki-partbuilder.git $partbuilderdir
+  git clone git@github.com:riptidewave93/meraki-partbuilder.git $partbuilderdir
   chmod +x $partbuilderdir/partbuilder.sh
 fi
 
