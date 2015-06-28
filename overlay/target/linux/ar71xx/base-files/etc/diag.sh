@@ -119,7 +119,7 @@ get_status_led() {
 		status_led="mr16:green:power"
 		;;
 	mr18)
-		status_led="mr18:white:power"
+		status_led="mr18:green:tricolor0"
 		;;
 	mr600)
 		status_led="mr600:orange:power"
