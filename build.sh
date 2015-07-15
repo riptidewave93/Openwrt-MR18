@@ -24,13 +24,13 @@ if [ ! -d $clonedir ]; then
   Msg "Cloning Repo..."
   git clone git://git.openwrt.org/openwrt.git $clonedir
   cd $clonedir
-  git reset --hard b8455a82b58c8ed16b0fc6742b00de6fc575f0e6
+  git reset --hard 28d26243956a0885fd206c85cb2ca194c1de7352
   cd - > /dev/null
 fi
 
 if [ ! -d $partbuilderdir ]; then
   Msg "Cloning Nandloader Image Builder..."
-  git clone git@github.com:riptidewave93/meraki-partbuilder.git $partbuilderdir
+  git clone https://github.com/riptidewave93/meraki-partbuilder.git $partbuilderdir
   chmod +x $partbuilderdir/partbuilder.sh
 fi
 
@@ -75,7 +75,7 @@ if [ $modify -eq 1 ]; then
   read input
   if [[ $input !=  *"n"* ]]; then
     Msg "Copying Config..."
-    cp $clonedir/build_dir/target-mips_34kc_musl-1.1.10/linux-ar71xx_nand/linux-3.18.16/.config $clonedir/target/linux/ar71xx/config-3.18
+    cp $clonedir/build_dir/target-mips_34kc_musl-1.1.10/linux-ar71xx_nand/linux-3.18.18/.config $clonedir/target/linux/ar71xx/config-3.18
     cp $clonedir/target/linux/ar71xx/config-3.18 $clonedir/target/linux/ar71xx/nand/config-default
   fi
 fi

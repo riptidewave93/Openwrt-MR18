@@ -46,7 +46,8 @@ meraki_caldata_check() {
 		calmtd=$(cat /proc/mtd | grep -e "\"caldata\"" | awk '{print $1}' | sed 's/:$//' | cut -c 4-) # UBI caldata MTD#
 		odmcalmtd=$(cat /proc/mtd | grep -e "\"odm-caldata\"" | awk '{print $1}' | sed 's/:$//' | cut -c 4-) # NAND odm-caldata MTD#
 		if [ -n "$calmtd" ]; then
-			if ! mr18_is_valid_cal $calmtd 4096 || ! mr18_is_valid_cal $calmtd 20480 || ! mr18_is_valid_cal $calmtd 36864 ; then
+			# We only check first 2 caldatas as they are the only ones we use in OpenWRT
+			if ! mr18_is_valid_cal $calmtd 4096 || ! mr18_is_valid_cal $calmtd 20480 ; then
 				echo "$board UBI caldata is invalid. Recreating partition!"
 				ubirmvol /dev/ubi0 -N caldata
 				sleep 1

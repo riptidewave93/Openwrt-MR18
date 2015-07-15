@@ -1,6 +1,6 @@
 --- a/arch/mips/ath79/Kconfig
 +++ b/arch/mips/ath79/Kconfig
-@@ -714,6 +714,16 @@ config ATH79_MACH_MR16
+@@ -746,6 +746,17 @@ config ATH79_MACH_MR16
         select ATH79_DEV_M25P80
         select ATH79_DEV_WMAC
 
@@ -11,6 +11,7 @@
 +       select ATH79_DEV_ETH
 +       select ATH79_DEV_GPIO_BUTTONS
 +       select ATH79_DEV_LEDS_GPIO
++       select ATH79_DEV_M25P80
 +       select ATH79_DEV_NFC
 +       select ATH79_DEV_WMAC
 +
@@ -20,7 +21,7 @@
 
 --- a/arch/mips/ath79/Makefile
 +++ b/arch/mips/ath79/Makefile
-@@ -80,6 +80,7 @@ obj-$(CONFIG_ATH79_MACH_HORNET_UB)	+
+@@ -82,6 +82,7 @@ obj-$(CONFIG_ATH79_MACH_HORNET_UB)	+
  obj-$(CONFIG_ATH79_MACH_MC_MAC1200R)     += mach-mc-mac1200r.o
  obj-$(CONFIG_ATH79_MACH_MR12)		+= mach-mr12.o
  obj-$(CONFIG_ATH79_MACH_MR16)		+= mach-mr16.o
@@ -30,7 +31,7 @@
  obj-$(CONFIG_ATH79_MACH_MYNET_N600)	+= mach-mynet-n600.o
 --- a/arch/mips/ath79/machtypes.h
 +++ b/arch/mips/ath79/machtypes.h
-@@ -69,6 +69,7 @@ enum ath79_mach_type {
+@@ -71,6 +71,7 @@ enum ath79_mach_type {
  	ATH79_MACH_HORNET_UB,		/* ALFA Networks Hornet-UB */
 	ATH79_MACH_MR12,		/* Cisco Meraki MR12 */
 	ATH79_MACH_MR16,		/* Cisco Meraki MR16 */

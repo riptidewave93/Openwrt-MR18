@@ -1,9 +1,8 @@
 # Openwrt-MR18
-[![Build Status](http://198.199.68.234/api/badge/github.com/riptidewave93/Openwrt-MR18/status.svg?branch=master)](http://198.199.68.234/github.com/riptidewave93/Openwrt-MR18)
 
 Bringup repo for the Cisco Meraki MR18 on OpenWRT!
 
-Code is based on revision http://git.openwrt.org/?p=openwrt.git;a=commit;h=b8455a82b58c8ed16b0fc6742b00de6fc575f0e6
+Code is based on revision http://git.openwrt.org/?p=openwrt.git;a=commit;h=28d26243956a0885fd206c85cb2ca194c1de7352
 
 Building
 -----

@@ -1,6 +1,6 @@
 #
 # Automatically generated file; DO NOT EDIT.
-# Linux/mips 3.18.16 Kernel Configuration
+# Linux/mips 3.18.18 Kernel Configuration
 #
 CONFIG_MIPS=y
 
@@ -60,10 +60,12 @@ CONFIG_ATH79=y
 # CONFIG_ATH79_MACH_ALL0258N is not set
 # CONFIG_ATH79_MACH_ALL0315N is not set
 # CONFIG_ATH79_MACH_ANTMINER_S1 is not set
+# CONFIG_ATH79_MACH_ANTMINER_S3 is not set
 # CONFIG_ATH79_MACH_AP113 is not set
 # CONFIG_ATH79_MACH_AP121 is not set
 # CONFIG_ATH79_MACH_AP132 is not set
 # CONFIG_ATH79_MACH_AP136 is not set
+# CONFIG_ATH79_MACH_AP143 is not set
 # CONFIG_ATH79_MACH_AP81 is not set
 # CONFIG_ATH79_MACH_AP83 is not set
 # CONFIG_ATH79_MACH_AP96 is not set
@@ -93,6 +95,7 @@ CONFIG_ATH79=y
 # CONFIG_ATH79_MACH_DIR_505_A1 is not set
 # CONFIG_ATH79_MACH_DIR_600_A1 is not set
 # CONFIG_ATH79_MACH_DIR_615_C1 is not set
+# CONFIG_ATH79_MACH_DIR_615_I1 is not set
 # CONFIG_ATH79_MACH_DIR_825_B1 is not set
 # CONFIG_ATH79_MACH_DIR_825_C1 is not set
 # CONFIG_ATH79_MACH_DRAGINO2 is not set
@@ -186,14 +189,14 @@ CONFIG_ATH79_MACH_MR18=y
 # CONFIG_SOC_QCA953X is not set
 CONFIG_SOC_QCA955X=y
 # CONFIG_SOC_QCA956X is not set
-# CONFIG_ATH79_DEV_M25P80 is not set
+CONFIG_ATH79_DEV_M25P80=y
 CONFIG_ATH79_DEV_AP9X_PCI=y
 # CONFIG_ATH79_DEV_DSA is not set
 CONFIG_ATH79_DEV_ETH=y
 CONFIG_ATH79_DEV_GPIO_BUTTONS=y
 CONFIG_ATH79_DEV_LEDS_GPIO=y
 CONFIG_ATH79_DEV_NFC=y
-# CONFIG_ATH79_DEV_SPI is not set
+CONFIG_ATH79_DEV_SPI=y
 # CONFIG_ATH79_DEV_USB is not set
 CONFIG_ATH79_DEV_WMAC=y
 # CONFIG_ATH79_NVRAM is not set
@@ -2036,7 +2039,7 @@ CONFIG_HAVE_ARCH_KGDB=y
 # CONFIG_KGDB is not set
 CONFIG_EARLY_PRINTK=y
 CONFIG_CMDLINE_BOOL=y
-CONFIG_CMDLINE="console=ttyS0,115200 machtype=MR18 ubi.mtd=ubi mtdparts=ar934x-nfc:512k(nandloader)ro,8M(part1),8M(part2),113664k(ubi),128k@130944k(odm-caldata)ro,16M@0x80000(kernel) rootfstype=squashfs,jffs2 noinitrd"
+CONFIG_CMDLINE="console=ttyS0,115200 machtype=MR18 ubi.mtd=ubi mtdparts=spi0.0:256k(u-boot),-(unused);ar934x-nfc:512k(nandloader)ro,8M(part1),8M(part2),113664k(ubi),128k@130944k(odm-caldata)ro,16M@0x80000(kernel) rootfstype=squashfs,jffs2 noinitrd"
 # CONFIG_CMDLINE_OVERRIDE is not set
 # CONFIG_RUNTIME_DEBUG is not set
 # CONFIG_SPINLOCK_TEST is not set
