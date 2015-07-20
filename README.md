@@ -17,7 +17,6 @@ Images by default will be moved to the root dir of the repo. Plan to build nandl
 To Do
 -----
 ##### MR18
-  * Fixup Ethernet (Seems our PHY chip has its own mdio requirements, needs more research)
   * Create Image Build Scripts (So we can stop using the default elf binaries)
   * Enable/Setup Sysupgrade
   * Move LED Driver to device driver instead of kernel patch
@@ -30,6 +29,7 @@ Working
   * NAND Read/Write
   * Basic Sysfs Integration
   * Nandloader bootable images
+  * Ethernet (Very dirty patch atm)
   * Caldata Generation using nanddump (needed for sysupgrade)
 
 Notice
