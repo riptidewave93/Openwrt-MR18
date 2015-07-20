@@ -115,6 +115,10 @@ static void __init mr18_setup(void)
 
   /* Setup SoC Eth Config */
   ath79_setup_qca955x_eth_cfg(QCA955X_ETH_CFG_RGMII_EN);
+  /*ath79_setup_qca955x_eth_cfg(QCA955X_ETH_CFG_RGMII_EN |
+                              QCA955X_ETH_CFG_RXD_DELAY |
+                              QCA955X_ETH_CFG_RDV_DELAY);*/
+  ath79_setup_qca955x_eth_rx_delay(3,3);
 
   /* MDIO Interface */
   ath79_register_mdio(0, 0x0);
@@ -126,6 +130,7 @@ static void __init mr18_setup(void)
   ath79_eth0_data.mii_bus_dev = &ath79_mdio0_device.dev;
   ath79_eth0_data.phy_if_mode = PHY_INTERFACE_MODE_RGMII;
   ath79_eth0_data.phy_mask = BIT(MR18_WAN_PHYADDR);
+  ath79_eth0_pll_data.pll_1000 = 0x0e000000;
   ath79_register_eth(0);
 
   /* LEDs and Buttons */
