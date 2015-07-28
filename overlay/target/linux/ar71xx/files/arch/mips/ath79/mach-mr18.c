@@ -92,8 +92,6 @@ static struct platform_device tricolor_leds = {
 
 static struct at803x_platform_data mr18_at803x_data = {
     .disable_smarteee = 1,
-    .enable_rgmii_rx_delay = 1,
-    .enable_rgmii_tx_delay = 1,
 };
 
 static struct mdio_board_info mr18_mdio0_info[] = {
@@ -130,7 +128,9 @@ static void __init mr18_setup(void)
   ath79_eth0_data.mii_bus_dev = &ath79_mdio0_device.dev;
   ath79_eth0_data.phy_if_mode = PHY_INTERFACE_MODE_RGMII;
   ath79_eth0_data.phy_mask = BIT(MR18_WAN_PHYADDR);
-  ath79_eth0_pll_data.pll_1000 = 0x0e000000;
+  ath79_eth0_pll_data.pll_1000 = 0x8f000000;
+  ath79_eth0_pll_data.pll_100 = 0x81000101;
+  ath79_eth0_pll_data.pll_10 = 0x81001313;
   ath79_register_eth(0);
 
   /* LEDs and Buttons */
