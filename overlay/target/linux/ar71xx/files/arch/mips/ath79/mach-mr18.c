@@ -90,18 +90,6 @@ static struct platform_device tricolor_leds = {
     .dev.platform_data = &tricolor_led_data,
 };
 
-static struct at803x_platform_data mr18_at803x_data = {
-    .disable_smarteee = 1,
-};
-
-static struct mdio_board_info mr18_mdio0_info[] = {
-	{
-		.bus_id = "ag71xx-mdio.0",
-		.phy_addr = MR18_WAN_PHYADDR,
-		.platform_data = &mr18_at803x_data,
-	},
-};
-
 static void __init mr18_setup(void)
 {
   /* SPI */
@@ -112,25 +100,21 @@ static void __init mr18_setup(void)
   ath79_register_nfc();
 
   /* Setup SoC Eth Config */
-  ath79_setup_qca955x_eth_cfg(QCA955X_ETH_CFG_RGMII_EN);
-  /*ath79_setup_qca955x_eth_cfg(QCA955X_ETH_CFG_RGMII_EN |
-                              QCA955X_ETH_CFG_RXD_DELAY |
-                              QCA955X_ETH_CFG_RDV_DELAY);*/
-  ath79_setup_qca955x_eth_rx_delay(3,3);
+  ath79_setup_qca955x_eth_cfg(QCA955X_ETH_CFG_RGMII_EN |
+			      (3 << QCA955X_ETH_CFG_RXD_DELAY_SHIFT) |
+			      (3 << QCA955X_ETH_CFG_RDV_DELAY_SHIFT));
 
   /* MDIO Interface */
   ath79_register_mdio(0, 0x0);
-  mdiobus_register_board_info(mr18_mdio0_info,
-                              ARRAY_SIZE(mr18_mdio0_info));
 
   /* GMAC0 is connected to an Atheros AR8035-A */
   ath79_init_mac(ath79_eth0_data.mac_addr, NULL, 0);
   ath79_eth0_data.mii_bus_dev = &ath79_mdio0_device.dev;
   ath79_eth0_data.phy_if_mode = PHY_INTERFACE_MODE_RGMII;
   ath79_eth0_data.phy_mask = BIT(MR18_WAN_PHYADDR);
-  ath79_eth0_pll_data.pll_1000 = 0x8f000000;
-  ath79_eth0_pll_data.pll_100 = 0x81000101;
-  ath79_eth0_pll_data.pll_10 = 0x81001313;
+  ath79_eth0_pll_data.pll_1000 = 0xa6000000;
+  ath79_eth0_pll_data.pll_100 = 0xa0000101;
+  ath79_eth0_pll_data.pll_10 = 0x80001313;
   ath79_register_eth(0);
 
   /* LEDs and Buttons */
