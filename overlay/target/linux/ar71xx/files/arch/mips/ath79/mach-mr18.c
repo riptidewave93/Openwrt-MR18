@@ -2,6 +2,7 @@
  *  Cisco Meraki MR18 board support
  *
  *  Copyright (C) 2015 Chris Blake <chrisrblake93@gmail.com>
+ *  Copyright (C) 2015 Christian Lamparter <chunkeey@googlemail.com>
  *  Copyright (C) 2015 Thomas Hebb <tommyhebb@gmail.com>
  *
  *  Based on Cisco Meraki GPL Release r23-20150601 MR18 Device Config
