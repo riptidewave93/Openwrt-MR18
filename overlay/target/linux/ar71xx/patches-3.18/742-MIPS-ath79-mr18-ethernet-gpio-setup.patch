@@ -1,0 +1,20 @@
+--- a/arch/mips/ath79/dev-eth.c	2015-07-31 19:18:56.608320769 +0200
++++ b/arch/mips/ath79/dev-eth.c	2015-07-31 19:19:13.298320913 +0200
+@@ -29,6 +29,8 @@
+ #include "common.h"
+ #include "dev-eth.h"
+
++extern void mr18_special(void);
++
+ unsigned char ath79_mac_base[ETH_ALEN] __initdata;
+
+ static struct resource ath79_mdio0_resources[] = {
+@@ -1184,6 +1186,8 @@ void __init ath79_register_eth(unsigned
+ 	ath79_device_reset_clear(pdata->reset_bit);
+ 	msleep(100);
+
++	mr18_special();
++
+ 	platform_device_register(pdev);
+ 	ath79_eth_instance++;
+ }

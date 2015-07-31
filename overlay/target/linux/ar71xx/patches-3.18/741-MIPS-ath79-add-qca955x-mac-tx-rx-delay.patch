@@ -69,6 +69,6 @@ b/arch/mips/ath79/dev-eth.c
 
  	base = ioremap_nocache(AR71XX_PLL_BASE, AR71XX_PLL_SIZE);
 -	__raw_writel(val, base + QCA955X_PLL_ETH_XMII_CONTROL_REG);
-+	__raw_writel(val, base + QCA955X_PLL_ETH_XMII_CONTROL_REG | BIT(31) | BIT(28) | BIT(26));
++	__raw_writel(val | (1 << 31) | (2 << 28) | (1 << 26) | (1 << 25), base + QCA955X_PLL_ETH_XMII_CONTROL_REG); /* Set TX invert, RX delay, TX delay, GigE set */
  	iounmap(base);
  }
