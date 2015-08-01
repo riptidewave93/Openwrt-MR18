@@ -97,7 +97,7 @@ case "$FIRMWARE" in
 	case $board in
 	mr18)
 		ath9k_eeprom_extract "caldata" 20480 2048
-		ath9k_patch_firmware_mac $(mtd_get_mac_binary board-config 96)
+		ath9k_patch_firmware_mac $(macaddr_add $(mtd_get_mac_binary board-config 96) +1)
 		;;
 	wndr3700v4 | \
 	wndr4300)

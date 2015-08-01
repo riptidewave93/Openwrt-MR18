@@ -135,84 +135,7 @@ static void qca955x_gmac_sgmii_res_cal(void)
    unsigned int read_data;
    unsigned int reversed_sgmii_value;
 
-#ifdef CALC_SGMII_CAL_VALUE
-   unsigned int read_data_otp, otp_value, otp_per_val, rbias_per;
-   unsigned int read_data_spi;
-   unsigned int rbias_pos_or_neg, res_cal_val;
-   unsigned int sgmii_pos, sgmii_res_cal_value;
-   unsigned int use_value;
-   unsigned int *address_spi = (unsigned int *)0xbffffffc;
-   ath_reg_wr(OTP_INTF2_ADDRESS, 0x7d);
-   ath_reg_wr(OTP_LDO_CONTROL_ADDRESS, 0x0);
-
-   while (ath_reg_rd(OTP_LDO_STATUS_ADDRESS) & OTP_LDO_STATUS_POWER_ON_MASK);
-
-   read_data = ath_reg_rd(OTP_MEM_0_ADDRESS  4);
-
-   while (!(ath_reg_rd(OTP_STATUS0_ADDRESS) & OTP_STATUS0_EFUSE_READ_DATA_VALID_MASK));
-
-   read_data_otp = ath_reg_rd(OTP_STATUS1_ADDRESS);
-
-   if (read_data_otp & 0x1fff) {
-      read_data = read_data_otp;
-   } else {
-      read_data_spi = *(address_spi);
-      if ((read_data_spi & 0xffff0000) == 0x5ca10000) {
-         read_data = read_data_spi;
-      } else {
-         read_data = read_data_otp;
-      }
-   }
-
-   if (read_data & 0x00001000) {
-      otp_value = (read_data & 0xfc0) >> 6;
-   } else {
-      otp_value = read_data & 0x3f;
-   }
-
-   if (otp_value > 31) {
-      otp_per_val = 63 - otp_value;
-      rbias_pos_or_neg = 1;
-   } else {
-      otp_per_val = otp_value;
-      rbias_pos_or_neg = 0;
-   }
-
-   rbias_per = otp_per_val * 15;
-
-   if (rbias_pos_or_neg == 1) {
-      res_cal_val = (rbias_per  34) / 21;
-      sgmii_pos = 1;
-   } else {
-      if (rbias_per > 34) {
-         res_cal_val = (rbias_per - 34) / 21;
-         sgmii_pos = 0;
-      } else {
-         res_cal_val = (34 - rbias_per) / 21;
-         sgmii_pos = 1;
-      }
-   }
-
-  if (sgmii_pos == 1) {
-      sgmii_res_cal_value = 8  res_cal_val;
-   } else {
-      sgmii_res_cal_value = 8 - res_cal_val;
-   }
-
-   reversed_sgmii_value = 0;
-   use_value = 0x8;
-   reversed_sgmii_value = reversed_sgmii_value | ((sgmii_res_cal_value & use_value) >> 3);
-   use_value = 0x4;
-   reversed_sgmii_value = reversed_sgmii_value | ((sgmii_res_cal_value & use_value) >> 1);
-   use_value = 0x2;
-   reversed_sgmii_value = reversed_sgmii_value | ((sgmii_res_cal_value & use_value) << 1);
-   use_value = 0x1;
-   reversed_sgmii_value = reversed_sgmii_value | ((sgmii_res_cal_value & use_value) << 3);
-
-   reversed_sgmii_value &= 0xf;
-#else
    reversed_sgmii_value = 0xe;
-#endif
    printk(KERN_INFO "SGMII cal value = 0x%x\n", reversed_sgmii_value);
 
    // To Check the locking of the SGMII PLL
@@ -228,6 +151,7 @@ static void qca955x_gmac_sgmii_res_cal(void)
          SGMII_SERDES_RES_CALIBRATION_SET(reversed_sgmii_value);
 
    ath_reg_wr(SGMII_SERDES_ADDRESS, read_data);
+   printk(KERN_INFO "Writing to SGMII_SERDES_ADDRESS = 0x%x\n", read_data);
 
 #define ETH_SGMII_SERDES_ADDRESS                                     0x1805004c
 #define ETH_SGMII_SERDES_EN_LOCK_DETECT_MASK                         0x00000004
@@ -268,54 +192,6 @@ static void qca955x_gmac_sgmii_res_cal(void)
    while (!(ath_reg_rd(SGMII_SERDES_ADDRESS) & SGMII_SERDES_LOCK_DETECT_STATUS_MASK));
 }
 
-static void mdio_init(void)
-{
-       uint32_t rddata;
-
-#define GPIO_IN_ENABLE3_ADDRESS                                      0x18040050
-
-#define GPIO_IN_ENABLE3_MII_GE1_MDI_MASK                             0x00ff0000
-#define GPIO_IN_ENABLE3_MII_GE1_MDI_LSB                              16
-#define GPIO_IN_ENABLE3_MII_GE1_MDI_SET(x)                           (((x) << GPIO_IN_ENABLE3_MII_GE1_MDI_LSB) & GPIO_IN_ENABLE3_MII_GE1_MDI_MASK)
-
-        rddata = ath_reg_rd(GPIO_IN_ENABLE3_ADDRESS)&
-                ~GPIO_IN_ENABLE3_MII_GE1_MDI_MASK;
-        rddata |= GPIO_IN_ENABLE3_MII_GE1_MDI_SET(19);
-        ath_reg_wr(GPIO_IN_ENABLE3_ADDRESS, rddata);
-
-#define GPIO_OE_ADDRESS                                              0x18040000
-        ath_reg_rmw_clear(GPIO_OE_ADDRESS, (1 << 19)); // GPIO 19 output
-        ath_reg_rmw_clear(GPIO_OE_ADDRESS, (1 << 17)); // GPIO 17 output
-
-#define GPIO_OUT_FUNCTION4_ADDRESS                                   0x1804003c
-#define GPIO_OUT_FUNCTION4_ENABLE_GPIO_19_MASK                       0xff000000
-#define GPIO_OUT_FUNCTION4_ENABLE_GPIO_17_MASK                       0x0000ff00
-
-        rddata = ath_reg_rd(GPIO_OUT_FUNCTION4_ADDRESS) &
-                ~ (GPIO_OUT_FUNCTION4_ENABLE_GPIO_19_MASK |
-                GPIO_OUT_FUNCTION4_ENABLE_GPIO_17_MASK);
-
-#define GPIO_OUT_FUNCTION4_ENABLE_GPIO_19_LSB                        24
-#define GPIO_OUT_FUNCTION4_ENABLE_GPIO_19_SET(x)                     (((x) << GPIO_OUT_FUNCTION4_ENABLE_GPIO_19_LSB) & GPIO_OUT_FUNCTION4_ENABLE_GPIO_19_MASK)
-#define GPIO_OUT_FUNCTION4_ENABLE_GPIO_17_LSB                        8
-#define GPIO_OUT_FUNCTION4_ENABLE_GPIO_17_SET(x)                     (((x) << GPIO_OUT_FUNCTION4_ENABLE_GPIO_17_LSB) & GPIO_OUT_FUNCTION4_ENABLE_GPIO_17_MASK)
-
-        rddata |= GPIO_OUT_FUNCTION4_ENABLE_GPIO_19_SET(0x20) |
-                  GPIO_OUT_FUNCTION4_ENABLE_GPIO_17_SET(0x21);
-
-        ath_reg_wr(GPIO_OUT_FUNCTION4_ADDRESS, rddata);
-
-}
-
-void mr18_special(void)
-{
-	#define SWITCH_CLOCK_SPARE_ADDRESS                                   0x18050020
-	ath_reg_wr(SWITCH_CLOCK_SPARE_ADDRESS, 0x520);	// USB and I2C?
-
-	mdio_init();
-	qca955x_gmac_sgmii_res_cal();
-}
-
 static void __init mr18_setup(void)
 {
   /* SPI - slot not populated, but functional when added! */
@@ -332,11 +208,21 @@ static void __init mr18_setup(void)
   /* MDIO Interface */
   ath79_register_mdio(0, 0x0);
 
+  /* even though, the PHY is connected via RGMII,
+   * the SGMII/SERDES PLLs need to be calibrated and locked.
+   * Or else, the PHY won't be working for this platfrom.
+   *
+   * Figuring this out took such a long time, that we want
+   * to point this quirk out, before someone wants to remove
+   * it.
+   */
+  qca955x_gmac_sgmii_res_cal();
+
   /* GMAC0 is connected to an Atheros AR8035-A */
   ath79_init_mac(ath79_eth0_data.mac_addr, NULL, 0);
   ath79_eth0_data.mii_bus_dev = &ath79_mdio0_device.dev;
   ath79_eth0_data.phy_if_mode = PHY_INTERFACE_MODE_RGMII;
-  ath79_eth0_data.phy_mask = 0x1f;
+  ath79_eth0_data.phy_mask = BIT(MR18_WAN_PHYADDR);
   ath79_eth0_pll_data.pll_1000 = 0xa6000000;
   ath79_eth0_pll_data.pll_100 = 0xa0000101;
   ath79_eth0_pll_data.pll_10 = 0x80001313;
