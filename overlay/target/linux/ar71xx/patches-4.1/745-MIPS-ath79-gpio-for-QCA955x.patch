@@ -1,0 +1,32 @@
+--- a/arch/mips/ath79/gpio.c	2015-08-01 10:47:03.093378792 +0200
++++ b/arch/mips/ath79/gpio.c	2015-08-01 11:58:46.569473585 +0200
+@@ -135,7 +135,8 @@ int ath79_gpio_direction_select(unsigned
+ 	void __iomem *base = ath79_gpio_base;
+ 	unsigned long flags;
+ 	bool ieq_1 = (soc_is_ar934x() ||
+-			soc_is_qca953x());
++		      soc_is_qca953x() ||
++		      soc_is_qca955x());
+ 
+ 	if (gpio >= ath79_gpio_count)
+ 		return -1;
+@@ -173,7 +174,9 @@ static void __iomem *ath79_gpio_get_func
+ 	    soc_is_ar933x())
+ 		reg = AR71XX_GPIO_REG_FUNC;
+ 	else if (soc_is_ar934x() ||
+-		 soc_is_qca953x() || soc_is_qca956x())
++		 soc_is_qca953x() ||
++		 soc_is_qca955x() ||
++		 soc_is_qca956x())
+ 		reg = AR934X_GPIO_REG_FUNC;
+ 	else
+ 		BUG();
+@@ -212,7 +215,7 @@ void __init ath79_gpio_output_select(uns
+ 	unsigned int reg;
+ 	u32 t, s;
+ 
+-	BUG_ON(!soc_is_ar934x() && !soc_is_qca953x());
++	BUG_ON(!soc_is_ar934x() && !soc_is_qca953x() && !soc_is_qca955x());
+ 
+ 	if (gpio >= AR934X_GPIO_COUNT)
+ 		return;
