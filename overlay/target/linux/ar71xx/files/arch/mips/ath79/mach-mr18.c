@@ -206,33 +206,16 @@ static void mdio_init(void)
 #define GPIO_IN_ENABLE3_MII_GE1_MDI_LSB                              16
 #define GPIO_IN_ENABLE3_MII_GE1_MDI_SET(x)                           (((x) << GPIO_IN_ENABLE3_MII_GE1_MDI_LSB) & GPIO_IN_ENABLE3_MII_GE1_MDI_MASK)
 
-        rddata = ath_reg_rd(GPIO_IN_ENABLE3_ADDRESS)&
+        rddata = ath_reg_rd(GPIO_IN_ENABLE3_ADDRESS) &
                 ~GPIO_IN_ENABLE3_MII_GE1_MDI_MASK;
         rddata |= GPIO_IN_ENABLE3_MII_GE1_MDI_SET(19);
         ath_reg_wr(GPIO_IN_ENABLE3_ADDRESS, rddata);
 
-#define GPIO_OE_ADDRESS                                              0x18040000
-        ath_reg_rmw_clear(GPIO_OE_ADDRESS, (1 << 19)); // GPIO 19 output
-        ath_reg_rmw_clear(GPIO_OE_ADDRESS, (1 << 17)); // GPIO 17 output
+	ath79_gpio_direction_select(MR18_GPIO_ETHERNET_GPIO19, 1);
+	ath79_gpio_direction_select(MR18_GPIO_ETHERNET_GPIO17, 1);
 
-#define GPIO_OUT_FUNCTION4_ADDRESS                                   0x1804003c
-#define GPIO_OUT_FUNCTION4_ENABLE_GPIO_19_MASK                       0xff000000
-#define GPIO_OUT_FUNCTION4_ENABLE_GPIO_17_MASK                       0x0000ff00
-
-        rddata = ath_reg_rd(GPIO_OUT_FUNCTION4_ADDRESS) &
-                ~ (GPIO_OUT_FUNCTION4_ENABLE_GPIO_19_MASK |
-                GPIO_OUT_FUNCTION4_ENABLE_GPIO_17_MASK);
-
-#define GPIO_OUT_FUNCTION4_ENABLE_GPIO_19_LSB                        24
-#define GPIO_OUT_FUNCTION4_ENABLE_GPIO_19_SET(x)                     (((x) << GPIO_OUT_FUNCTION4_ENABLE_GPIO_19_LSB) & GPIO_OUT_FUNCTION4_ENABLE_GPIO_19_MASK)
-#define GPIO_OUT_FUNCTION4_ENABLE_GPIO_17_LSB                        8
-#define GPIO_OUT_FUNCTION4_ENABLE_GPIO_17_SET(x)                     (((x) << GPIO_OUT_FUNCTION4_ENABLE_GPIO_17_LSB) & GPIO_OUT_FUNCTION4_ENABLE_GPIO_17_MASK)
-
-        rddata |= GPIO_OUT_FUNCTION4_ENABLE_GPIO_19_SET(0x20) |
-                  GPIO_OUT_FUNCTION4_ENABLE_GPIO_17_SET(0x21);
-
-        ath_reg_wr(GPIO_OUT_FUNCTION4_ADDRESS, rddata);
-
+	ath79_gpio_direction_output(MR18_GPIO_ETHERNET_GPIO19, 20);
+	ath79_gpio_direction_output(MR18_GPIO_ETHERNET_GPIO17, 21);
 }
 
 void mr18_special(void)
@@ -241,6 +224,7 @@ void mr18_special(void)
 	ath_reg_wr(SWITCH_CLOCK_SPARE_ADDRESS, 0x520);	// USB and I2C?
 
 	mdio_init();
+
 	qca955x_gmac_sgmii_res_cal();
 }
 
