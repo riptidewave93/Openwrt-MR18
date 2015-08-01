@@ -139,84 +139,7 @@ static void qca955x_gmac_sgmii_res_cal(void)
    unsigned int read_data;
    unsigned int reversed_sgmii_value;
 
-#ifdef CALC_SGMII_CAL_VALUE
-   unsigned int read_data_otp, otp_value, otp_per_val, rbias_per;
-   unsigned int read_data_spi;
-   unsigned int rbias_pos_or_neg, res_cal_val;
-   unsigned int sgmii_pos, sgmii_res_cal_value;
-   unsigned int use_value;
-   unsigned int *address_spi = (unsigned int *)0xbffffffc;
-   ath_reg_wr(OTP_INTF2_ADDRESS, 0x7d);
-   ath_reg_wr(OTP_LDO_CONTROL_ADDRESS, 0x0);
-
-   while (ath_reg_rd(OTP_LDO_STATUS_ADDRESS) & OTP_LDO_STATUS_POWER_ON_MASK);
-
-   read_data = ath_reg_rd(OTP_MEM_0_ADDRESS  4);
-
-   while (!(ath_reg_rd(OTP_STATUS0_ADDRESS) & OTP_STATUS0_EFUSE_READ_DATA_VALID_MASK));
-
-   read_data_otp = ath_reg_rd(OTP_STATUS1_ADDRESS);
-
-   if (read_data_otp & 0x1fff) {
-      read_data = read_data_otp;
-   } else {
-      read_data_spi = *(address_spi);
-      if ((read_data_spi & 0xffff0000) == 0x5ca10000) {
-         read_data = read_data_spi;
-      } else {
-         read_data = read_data_otp;
-      }
-   }
-
-   if (read_data & 0x00001000) {
-      otp_value = (read_data & 0xfc0) >> 6;
-   } else {
-      otp_value = read_data & 0x3f;
-   }
-
-   if (otp_value > 31) {
-      otp_per_val = 63 - otp_value;
-      rbias_pos_or_neg = 1;
-   } else {
-      otp_per_val = otp_value;
-      rbias_pos_or_neg = 0;
-   }
-
-   rbias_per = otp_per_val * 15;
-
-   if (rbias_pos_or_neg == 1) {
-      res_cal_val = (rbias_per  34) / 21;
-      sgmii_pos = 1;
-   } else {
-      if (rbias_per > 34) {
-         res_cal_val = (rbias_per - 34) / 21;
-         sgmii_pos = 0;
-      } else {
-         res_cal_val = (34 - rbias_per) / 21;
-         sgmii_pos = 1;
-      }
-   }
-
-  if (sgmii_pos == 1) {
-      sgmii_res_cal_value = 8  res_cal_val;
-   } else {
-      sgmii_res_cal_value = 8 - res_cal_val;
-   }
-
-   reversed_sgmii_value = 0;
-   use_value = 0x8;
-   reversed_sgmii_value = reversed_sgmii_value | ((sgmii_res_cal_value & use_value) >> 3);
-   use_value = 0x4;
-   reversed_sgmii_value = reversed_sgmii_value | ((sgmii_res_cal_value & use_value) >> 1);
-   use_value = 0x2;
-   reversed_sgmii_value = reversed_sgmii_value | ((sgmii_res_cal_value & use_value) << 1);
-   use_value = 0x1;
-   reversed_sgmii_value = reversed_sgmii_value | ((sgmii_res_cal_value & use_value) << 3);
-
-   reversed_sgmii_value &= 0xf;
-#else
    reversed_sgmii_value = 0xe;
-#endif
    printk(KERN_INFO "SGMII cal value = 0x%x\n", reversed_sgmii_value);
 
    // To Check the locking of the SGMII PLL
@@ -232,6 +155,7 @@ static void qca955x_gmac_sgmii_res_cal(void)
          SGMII_SERDES_RES_CALIBRATION_SET(reversed_sgmii_value);
 
    ath_reg_wr(SGMII_SERDES_ADDRESS, read_data);
+   printk(KERN_INFO "Writing to SGMII_SERDES_ADDRESS = 0x%x\n", read_data);
 
 #define ETH_SGMII_SERDES_ADDRESS                                     0x1805004c
 #define ETH_SGMII_SERDES_EN_LOCK_DETECT_MASK                         0x00000004
@@ -340,7 +264,7 @@ static void __init mr18_setup(void)
   ath79_init_mac(ath79_eth0_data.mac_addr, NULL, 0);
   ath79_eth0_data.mii_bus_dev = &ath79_mdio0_device.dev;
   ath79_eth0_data.phy_if_mode = PHY_INTERFACE_MODE_RGMII;
-  ath79_eth0_data.phy_mask = 0x1f;
+  ath79_eth0_data.phy_mask = BIT(MR18_WAN_PHYADDR);
   ath79_eth0_pll_data.pll_1000 = 0xa6000000;
   ath79_eth0_pll_data.pll_100 = 0xa0000101;
   ath79_eth0_pll_data.pll_10 = 0x80001313;

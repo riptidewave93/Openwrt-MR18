@@ -2,7 +2,7 @@
 
 Bringup repo for the Cisco Meraki MR18 on OpenWRT!
 
-Code is based on revision http://git.openwrt.org/?p=openwrt.git;a=commit;h=28d26243956a0885fd206c85cb2ca194c1de7352
+Code is based on revision http://git.openwrt.org/?p=openwrt.git;a=commit;h=21067c3680641ba52f00d11206f1eff7157ccd53
 
 Building
 -----
@@ -12,14 +12,20 @@ Building
 #### Modify Configs and Build
 `./build.sh modify`
 
-Images by default will be moved to the root dir of the repo. Plan to build nandloader images for public drop.
+Images by default will be moved to the root dir of the repo.
 
 To Do
 -----
 ##### MR18
-  * Create Image Build Scripts (So we can stop using the default elf binaries)
-  * Enable/Setup Sysupgrade
+  1. Cleanup NIC Init (Make a proper patch)
+  * Create Device Images
+    1. Port kernel builder to C from bash
+    * Figure out NAND layout for release
+      * Figure out how to handle MAC information
+    * Create image generation code for ./target/linux/ar71xx/image/Makefile
+    * Enable/Setup Sysupgrade
   * Move LED Driver to device driver instead of kernel patch
+  * Possibly cleanup Caldata generation code
 
 Working
 -----
@@ -34,4 +40,4 @@ Working
 
 Notice
 ------
-This is AGES from being ready for an actual "release" so lets get to work! :)
+This is CLOSE to being ready for an actual unofficial "release" so keep kicking butt! :)

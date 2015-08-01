@@ -24,7 +24,7 @@ if [ ! -d $clonedir ]; then
   Msg "Cloning Repo..."
   git clone git://git.openwrt.org/openwrt.git $clonedir
   cd $clonedir
-  git reset --hard 28d26243956a0885fd206c85cb2ca194c1de7352
+  git reset --hard 21067c3680641ba52f00d11206f1eff7157ccd53
   cd - > /dev/null
 fi
 
@@ -41,7 +41,7 @@ if [ $firstbuild = "0" ]; then
   cd $clonedir
   rm -rf ./bin
   # make target/linux/clean
-  rm -rf ./build_dir/target-mips_34kc_musl-1.1.10/linux-ar71xx_nand/linux-3*
+  rm -rf ./build_dir/target-mips_34kc_musl-1.1.10/linux-ar71xx_nand/linux-4*
   cd - > /dev/null
 fi
 
@@ -60,8 +60,8 @@ fi
 
 Msg "Applying configurations..."
 cp ./configs/openwrt-config $clonedir/.config
-cp ./configs/kernel-config-3.18 $clonedir/target/linux/ar71xx/config-3.18
-cp ./configs/kernel-config-3.18 $clonedir/target/linux/ar71xx/nand/config-default
+cp ./configs/kernel-config $clonedir/target/linux/ar71xx/config-4.1
+cp ./configs/kernel-config $clonedir/target/linux/ar71xx/nand/config-default
 
 if [ $modify -eq 1 ]; then
   cd $clonedir
@@ -75,8 +75,8 @@ if [ $modify -eq 1 ]; then
   read input
   if [[ $input !=  *"n"* ]]; then
     Msg "Copying Config..."
-    cp $clonedir/build_dir/target-mips_34kc_musl-1.1.10/linux-ar71xx_nand/linux-3.18.18/.config $clonedir/target/linux/ar71xx/config-3.18
-    cp $clonedir/target/linux/ar71xx/config-3.18 $clonedir/target/linux/ar71xx/nand/config-default
+    cp $clonedir/build_dir/target-mips_34kc_musl-1.1.10/linux-ar71xx_nand/linux-4.1.3/.config $clonedir/target/linux/ar71xx/config-4.1
+    $clonedir/target/linux/ar71xx/config-4.1 $clonedir/target/linux/ar71xx/nand/config-default
   fi
 fi
 
@@ -100,7 +100,7 @@ if [ $modify -eq 1 ]; then
   if [[ $input !=  *"n"* ]]; then
     Msg "Saving configs..."
     cp $clonedir/.config ./configs/openwrt-config
-    cp $clonedir/target/linux/ar71xx/config-3.18 ./configs/kernel-config-3.18
+    cp $clonedir/target/linux/ar71xx/config-4.1 ./configs/kernel-config
   fi
 fi
 

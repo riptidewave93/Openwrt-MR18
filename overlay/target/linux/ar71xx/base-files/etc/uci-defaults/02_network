@@ -18,6 +18,7 @@ case "$board" in
 all0315n |\
 all0258n |\
 ja76pf2|\
+rocket-m-ti |\
 ubnt-unifi-outdoor)
 	ucidef_set_interface_lan "eth0 eth1"
 	;;
@@ -34,11 +35,18 @@ esr1750 |\
 epg5000)
 	ucidef_set_interfaces_lan_wan "eth0.1" "eth0.2"
 	ucidef_add_switch "switch0" "1" "1"
-	ucidef_add_switch_vlan "switch0" "1" "0t 2 3 4 5"
-	ucidef_add_switch_vlan "switch0" "2" "0t 1"
+	ucidef_add_switch_vlan "switch0" "1" "0t 1 2 3 4"
+	ucidef_add_switch_vlan "switch0" "2" "0t 5"
 	;;
 
 ap136-010)
+	ucidef_set_interfaces_lan_wan "eth0" "eth1"
+	ucidef_add_switch "switch0" "1" "1"
+	ucidef_add_switch_vlan "switch0" "1" "0 1 2 3 4"
+	ucidef_add_switch_vlan "switch0" "2" "5 6"
+	;;
+
+ap147-010)
 	ucidef_set_interfaces_lan_wan "eth0" "eth1"
 	ucidef_add_switch "switch0" "1" "1"
 	ucidef_add_switch_vlan "switch0" "1" "0 1 2 3 4"
@@ -212,6 +220,7 @@ tl-wr941nd)
 	ucidef_set_interfaces_lan_wan "lan1 lan2 lan3 lan4" "wan"
 	;;
 
+dir-615-i1 |\
 r6100 |\
 smart-300 |\
 tl-mr3420-v2 |\
@@ -275,6 +284,10 @@ mynet-n750)
 	[ -n "$mac" ] && ucidef_set_interface_macaddr "wan" "$mac"
 	;;
 
+onion-omega)
+	ucidef_set_interface_lan "wlan0"
+	;;
+
 dhp-1565-a1 |\
 dir-835-a1 |\
 wndr3700v4 | \
@@ -297,6 +310,16 @@ esr900)
 	ucidef_add_switch_vlan "switch0" "2" "0t 5"
 	mac=$(mtd_get_mac_ascii u-boot-env "wanaddr")
 	[ -n "$mac" ] && ucidef_set_interface_macaddr "wan" "$mac"
+	;;
+
+dlan-pro-500-wp)
+	ucidef_set_interface_lan "eth0 eth1"
+	;;
+
+dlan-pro-1200-ac)
+	ucidef_set_interface_lan "eth0"
+	ucidef_add_switch "switch0" "1" "0"
+	ucidef_add_switch_vlan "switch0" "0" "0 2 3 4"
 	;;
 
 all0305 |\
@@ -346,6 +369,7 @@ wp543)
 	;;
 
 antminer-s1 |\
+antminer-s3 |\
 dir-505-a1)
 	ucidef_set_interface_lan "eth1"
 	;;
@@ -384,6 +408,7 @@ wpj558)
 
 ap121 |\
 ap121-mini |\
+ap143 |\
 ap96 |\
 airrouter |\
 dir-600-a1 |\
