@@ -43,8 +43,8 @@ meraki_caldata_check() {
 			ubiupdatevol /dev/ubi0_$calubivol /tmp/odm-caldata.raw
 			rm /tmp/odm-caldata.raw
 		}
-		calmtd=$(cat /proc/mtd | grep -e "\"caldata\"" | awk '{print $1}' | sed 's/:$//' | cut -c 4-) # UBI caldata MTD#
-		odmcalmtd=$(cat /proc/mtd | grep -e "\"odm-caldata\"" | awk '{print $1}' | sed 's/:$//' | cut -c 4-) # NAND odm-caldata MTD#
+		calmtd=$(cat /proc/mtd | grep -e "\"caldata\"" | awk '{print $1}' | sed 's/:$//' | cut -c 4-) # UBI caldata MTD
+		odmcalmtd=$(cat /proc/mtd | grep -e "\"odm-caldata\"" | awk '{print $1}' | sed 's/:$//' | cut -c 4-) # NAND odm-caldata MTD
 		if [ -n "$calmtd" ]; then
 			# We only check first 2 caldatas as they are the only ones we use in OpenWRT
 			if ! mr18_is_valid_cal $calmtd 4096 || ! mr18_is_valid_cal $calmtd 20480 ; then
@@ -79,7 +79,7 @@ case "$FIRMWARE" in
 	mr18)
 		meraki_caldata_check $board # Only need once
 		ath9k_eeprom_extract "caldata" 4096 2048
-		ath9k_patch_firmware_mac $(mtd_get_mac_binary board-config 96)
+		ath9k_patch_firmware_mac $(macaddr_add $(mtd_get_mac_binary board-config 102) +1)
 		;;
 	r6100 | \
 	wndr3700v4 | \
@@ -97,7 +97,7 @@ case "$FIRMWARE" in
 	case $board in
 	mr18)
 		ath9k_eeprom_extract "caldata" 20480 2048
-		ath9k_patch_firmware_mac $(macaddr_add $(mtd_get_mac_binary board-config 96) +1)
+		ath9k_patch_firmware_mac $(macaddr_add $(mtd_get_mac_binary board-config 102) +2)
 		;;
 	wndr3700v4 | \
 	wndr4300)

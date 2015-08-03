@@ -160,28 +160,6 @@ static void qca955x_gmac_sgmii_res_cal(void)
 		ETH_SGMII_SERDES_PLL_REFCLK_SEL_MASK |
 		ETH_SGMII_SERDES_EN_PLL_MASK);
 
-#define SGMII_SERDES_ADDRESS                                         0x18070018
-#define SGMII_SERDES_CDR_BW_LSB                                      1
-#define SGMII_SERDES_CDR_BW_MASK                                     0x00000006
-#define SGMII_SERDES_CDR_BW_SET(x)                                   (((x) << SGMII_SERDES_CDR_BW_LSB) & SGMII_SERDES_CDR_BW_MASK)
-#define SGMII_SERDES_TX_DR_CTRL_LSB                                  4
-#define SGMII_SERDES_TX_DR_CTRL_MASK                                 0x00000070
-#define SGMII_SERDES_TX_DR_CTRL_SET(x)                               (((x) << SGMII_SERDES_TX_DR_CTRL_LSB) & SGMII_SERDES_TX_DR_CTRL_MASK)
-#define SGMII_SERDES_PLL_BW_MASK                                     0x00000100
-#define SGMII_SERDES_EN_SIGNAL_DETECT_MASK                           0x00010000
-#define SGMII_SERDES_FIBER_SDO_MASK                                  0x00020000
-#define SGMII_SERDES_VCO_REG_LSB                                     27
-#define SGMII_SERDES_VCO_REG_MASK                                    0x78000000
-#define SGMII_SERDES_VCO_REG_SET(x)                                  (((x) << SGMII_SERDES_VCO_REG_LSB) & SGMII_SERDES_VCO_REG_MASK)
-
-	ath_reg_rmw_set(SGMII_SERDES_ADDRESS,
-		SGMII_SERDES_CDR_BW_SET(3) |
-		SGMII_SERDES_TX_DR_CTRL_SET(1) |
-		SGMII_SERDES_PLL_BW_MASK |
-		SGMII_SERDES_EN_SIGNAL_DETECT_MASK |
-		SGMII_SERDES_FIBER_SDO_MASK |
-		SGMII_SERDES_VCO_REG_SET(3));
-
 	ath79_device_reset_clear(QCA953X_RESET_ETH_SWITCH_ANALOG);
 	ath79_device_reset_clear(QCA953X_RESET_ETH_SWITCH);
 

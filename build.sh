@@ -37,6 +37,7 @@ fi
 if [ $firstbuild = "0" ]; then
   Msg "Cleaning Builddir..."
   rm ./openwrt-ar71xx-nand-vmlinux-initramfs-nandloader-part1.bin 2> /dev/null
+  rm ./openwrt-ar71xx-nand-vmlinux-nandloader-part1.bin 2> /dev/null
   rm ./openwrt-ar71xx-nand-vmlinux-initramfs.elf 2> /dev/null
   cd $clonedir
   rm -rf ./bin
@@ -76,7 +77,7 @@ if [ $modify -eq 1 ]; then
   if [[ $input !=  *"n"* ]]; then
     Msg "Copying Config..."
     cp $clonedir/build_dir/target-mips_34kc_musl-1.1.10/linux-ar71xx_nand/linux-4.1.3/.config $clonedir/target/linux/ar71xx/config-4.1
-    $clonedir/target/linux/ar71xx/config-4.1 $clonedir/target/linux/ar71xx/nand/config-default
+    cp $clonedir/target/linux/ar71xx/config-4.1 $clonedir/target/linux/ar71xx/nand/config-default
   fi
 fi
 
@@ -105,10 +106,10 @@ if [ $modify -eq 1 ]; then
 fi
 
 if [ -e $clonedir/bin/ar71xx/openwrt-ar71xx-nand-vmlinux-initramfs.bin ]; then
-  Msg "Generating Nandloader Bootable Image"
+  Msg "Generating Nandloader Bootable Images"
   # Change to device image once we get the platform in makefile setup
   $partbuilderdir/partbuilder.sh $clonedir/bin/ar71xx/openwrt-ar71xx-nand-vmlinux-initramfs.bin ./openwrt-ar71xx-nand-vmlinux-initramfs-nandloader-part1.bin
-
+  $partbuilderdir/partbuilder.sh $clonedir/bin/ar71xx/openwrt-ar71xx-nand-vmlinux.bin ./openwrt-ar71xx-nand-vmlinux-nandloader-part1.bin
   Msg "Moving Images to Local Dir..."
   cp $clonedir/bin/ar71xx/openwrt-ar71xx-nand-vmlinux-initramfs.elf ./
 fi
