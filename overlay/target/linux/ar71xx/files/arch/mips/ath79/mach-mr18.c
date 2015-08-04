@@ -95,21 +95,6 @@ static struct platform_device tricolor_leds = {
  * Copied from U-Boot Atheros LSDK-9.5.5.36
  */
 
-#define OTP_INTF2_ADDRESS                                            0x18131008
-#define OTP_LDO_CONTROL_ADDRESS                                      0x18131024
-#define OTP_LDO_STATUS_ADDRESS                                       0x1813102c
-
-#define OTP_LDO_STATUS_POWER_ON_MSB                                  0
-#define OTP_LDO_STATUS_POWER_ON_LSB                                  0
-#define OTP_LDO_STATUS_POWER_ON_MASK                                 0x00000001
-#define OTP_LDO_STATUS_POWER_ON_RESET                                0x0 // 0
-
-#define OTP_MEM_0_ADDRESS                                            0x18130000
-#define OTP_STATUS0_EFUSE_READ_DATA_VALID_MASK                       0x00000004
-
-#define OTP_STATUS0_ADDRESS                                          0x18131018
-#define OTP_STATUS1_ADDRESS                                          0x1813101c
-
 #define ath_reg_rd(_phys)       (*(volatile uint32_t *)KSEG1ADDR(_phys))
 
 #define ath_reg_wr_nf(_phys, _val) \
@@ -136,24 +121,23 @@ static void qca955x_gmac_sgmii_res_cal(void)
 	unsigned int reversed_sgmii_value;
 
 	reversed_sgmii_value = 0xe;
-// To Check the locking of the SGMII PLL
-#define SGMII_SERDES_ADDRESS                                         0x18070018
-#define SGMII_SERDES_RES_CALIBRATION_LSB                             23
-#define SGMII_SERDES_RES_CALIBRATION_MASK                            0x07800000
-#define SGMII_SERDES_RES_CALIBRATION_GET(x)                          (((x) & SGMII_SERDES_RES_CALIBRATION_MASK) >> SGMII_SERDES_RES_CALIBRATION_LSB)
-#define SGMII_SERDES_RES_CALIBRATION_SET(x)                          (((x) << SGMII_SERDES_RES_CALIBRATION_LSB) & SGMII_SERDES_RES_CALIBRATION_MASK)
+
+	// To Check the locking of the SGMII PLL
+	#define SGMII_SERDES_ADDRESS                                         0x18070018
+	#define SGMII_SERDES_RES_CALIBRATION_LSB                             23
+	#define SGMII_SERDES_RES_CALIBRATION_MASK                            0x07800000
+	#define SGMII_SERDES_RES_CALIBRATION_GET(x)                          (((x) & SGMII_SERDES_RES_CALIBRATION_MASK) >> SGMII_SERDES_RES_CALIBRATION_LSB)
+	#define SGMII_SERDES_RES_CALIBRATION_SET(x)                          (((x) << SGMII_SERDES_RES_CALIBRATION_LSB) & SGMII_SERDES_RES_CALIBRATION_MASK)
 
 	read_data = (ath_reg_rd(SGMII_SERDES_ADDRESS) &
 		~SGMII_SERDES_RES_CALIBRATION_MASK) |
 		SGMII_SERDES_RES_CALIBRATION_SET(reversed_sgmii_value);
-
 	ath_reg_wr(SGMII_SERDES_ADDRESS, read_data);
 
-#define ETH_SGMII_SERDES_ADDRESS                                     0x1805004c
-#define ETH_SGMII_SERDES_EN_LOCK_DETECT_MASK                         0x00000004
-#define ETH_SGMII_SERDES_PLL_REFCLK_SEL_MASK                         0x00000002
-#define ETH_SGMII_SERDES_EN_PLL_MASK                                 0x00000001
-
+	#define ETH_SGMII_SERDES_ADDRESS                                     0x1805004c
+	#define ETH_SGMII_SERDES_EN_LOCK_DETECT_MASK                         0x00000004
+	#define ETH_SGMII_SERDES_PLL_REFCLK_SEL_MASK                         0x00000002
+	#define ETH_SGMII_SERDES_EN_PLL_MASK                                 0x00000001
 
 	ath_reg_wr(ETH_SGMII_SERDES_ADDRESS,
 		ETH_SGMII_SERDES_EN_LOCK_DETECT_MASK |
