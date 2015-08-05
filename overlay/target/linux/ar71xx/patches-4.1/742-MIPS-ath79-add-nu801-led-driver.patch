@@ -1,9 +1,9 @@
 --- a/drivers/leds/Kconfig
 +++ b/drivers/leds/Kconfig
 @@ -500,6 +500,13 @@ config LEDS_MENF21BMC
-
+ 
  comment "LED driver for blink(1) USB RGB LED is under Special HID drivers (HID_THINGM)"
-
+ 
 +config LEDS_NU801
 +	tristate "LED driver for NU801 RGB LED"
 +	depends on LEDS_CLASS
@@ -16,7 +16,7 @@
  	depends on LEDS_CLASS
 --- a/drivers/leds/leds-nu801.c
 +++ b/drivers/leds/leds-nu801.c
-@@ -0,0 +1,393 @@
+@@ -0,0 +1,394 @@
 +/*
 + * LED driver for NU801
 + *
@@ -45,7 +45,7 @@
 +#define MAX_NAME_LENGTH 24
 +#define NUM_COLORS 3
 +
-+static const char *led_nu801_colors[] = { "blue", "green", "red" };
++static const char * const led_nu801_colors[] = { "blue", "green", "red" };
 +
 +struct led_nu801_led_data {
 +	struct led_classdev cdev;
@@ -118,13 +118,13 @@
 +}
 +
 +static int __init led_nu801_create(struct led_nu801_data *controller,
-+				      struct device *parent,
-+				      int index,
-+				      enum led_brightness brightness,
++				    struct device *parent,
++				    int index,
++				    enum led_brightness brightness,
 +#ifdef CONFIG_LEDS_TRIGGERS
-+				      const char *default_trigger,
++				    const char *default_trigger,
 +#endif
-+				      const char *color)
++				    const char *color)
 +{
 +	struct led_nu801_led_data *led = &controller->led_chain[index];
 +	int ret;
@@ -150,11 +150,10 @@
 +	return ret;
 +}
 +
-+
 +static int __init
 +led_nu801_create_chain(const struct led_nu801_template *template,
-+		       struct led_nu801_data *controller,
-+		       struct device *parent)
++			struct led_nu801_data *controller,
++			struct device *parent)
 +{
 +	int ret;
 +	int index;
@@ -171,9 +170,8 @@
 +	controller->led_chain = kzalloc(sizeof(struct led_nu801_led_data) *
 +					controller->num_leds, GFP_KERNEL);
 +
-+	if (!controller->led_chain) {
++	if (!controller->led_chain)
 +		return -ENOMEM;
-+	}
 +
 +	ret = gpio_request(controller->cki, template->name);
 +	if (ret < 0)
@@ -202,14 +200,14 @@
 +
 +	for (index = 0; index < controller->num_leds; index++) {
 +		ret = led_nu801_create(controller, parent, index,
-+					template->init_brightness
-+					[index % NUM_COLORS],
++			template->init_brightness
++			[index % NUM_COLORS],
 +#ifdef CONFIG_LEDS_TRIGGERS
-+					template->default_trigger,
++			template->default_trigger,
 +#endif
-+					template->led_colors[index % NUM_COLORS] ?
-+					template->led_colors[index % NUM_COLORS] :
-+					led_nu801_colors[index % NUM_COLORS]);
++			template->led_colors[index % NUM_COLORS] ?
++			template->led_colors[index % NUM_COLORS] :
++			led_nu801_colors[index % NUM_COLORS]);
 +		if (ret < 0)
 +			goto err_ret_sdi;
 +	}
@@ -258,7 +256,8 @@
 +	kfree(led_chain);
 +}
 +
-+static struct led_nu801_data * __init leds_nu801_create_of(struct platform_device *pdev)
++static struct led_nu801_data * __init
++leds_nu801_create_of(struct platform_device *pdev)
 +{
 +	struct device_node *np = pdev->dev.of_node, *child;
 +	struct led_nu801_data *controllers;
@@ -270,7 +269,8 @@
 +	if (!count)
 +		return NULL;
 +
-+	controllers = kzalloc(sizeof(struct led_nu801_data) * count, GFP_KERNEL);
++	controllers = kzalloc(sizeof(struct led_nu801_data) * count,
++			      GFP_KERNEL);
 +	if (!controllers)
 +		return NULL;
 +
@@ -283,31 +283,35 @@
 +		template.cki = of_get_named_gpio_flags(child, "cki", 0, NULL);
 +		template.sdi = of_get_named_gpio_flags(child, "sdi", 0, NULL);
 +		if (of_find_property(child, "lei", NULL)) {
-+			template.lei = of_get_named_gpio_flags(child, "lei", 0, NULL);
++			template.lei = of_get_named_gpio_flags(child, "lei",
++							       0, NULL);
 +		} else {
 +			template.lei = -1;
 +		}
 +		of_property_read_u32(child, "ndelay", &template.ndelay);
 +		of_property_read_u32(child, "num_leds", &template.num_leds);
-+		template.name = of_get_property(child, "label", NULL) ? : child->name;
-+		template.default_trigger = of_get_property(child, "default-trigger", NULL);
++		template.name = of_get_property(child, "label", NULL) ? :
++			child->name;
++		template.default_trigger = of_get_property(child,
++			"default-trigger", NULL);
 +
-+		jj=0;
-+		for_each_child_of_node(child,colors) {
-+			template.led_colors[jj] = of_get_property(colors, "label", NULL);
++		jj = 0;
++		for_each_child_of_node(child, colors) {
++			template.led_colors[jj] = of_get_property(colors,
++				 "label", NULL);
 +			state = of_get_property(colors, "state", NULL);
-+			if (!strncmp(state,"off",3))
++			if (!strncmp(state, "off", 3))
 +				template.init_brightness[jj] = LED_OFF;
-+			else if (!strncmp(state,"half",4))
++			else if (!strncmp(state, "half", 4))
 +				template.init_brightness[jj] = LED_HALF;
-+			else if (!strncmp(state,"full",4))
++			else if (!strncmp(state, "full", 4))
 +				template.init_brightness[jj] = LED_FULL;
 +			jj++;
 +		}
 +
 +		ret = led_nu801_create_chain(&template,
-+					&controllers[i],
-+					&pdev->dev);
++					     &controllers[i],
++					     &pdev->dev);
 +		if (ret < 0)
 +			goto err;
 +		i++;
@@ -328,7 +332,11 @@
 +	struct led_nu801_data *controllers;
 +	int i, ret = 0;
 +
-+	if (pdata && pdata->num_controllers) {
++	if (!(pdata && pdata->num_controllers)) {
++		controllers = leds_nu801_create_of(pdev);
++		if (!controllers)
++			return -ENODEV;
++	}
 +
 +	controllers = kzalloc(sizeof(struct led_nu801_data) *
 +			      pdata->num_controllers, GFP_KERNEL);
@@ -341,11 +349,6 @@
 +					      &pdev->dev);
 +		if (ret < 0)
 +			goto err;
-+	}
-+	} else {
-+		controllers = leds_nu801_create_of(pdev);
-+		if (!controllers)
-+			return -ENODEV;
 +	}
 +
 +	platform_set_drvdata(pdev, controllers);
@@ -416,7 +419,7 @@
  obj-$(CONFIG_LEDS_DELL_NETBOOKS)	+= dell-led.o
  obj-$(CONFIG_LEDS_MC13783)		+= leds-mc13783.o
  obj-$(CONFIG_LEDS_RB750)		+= leds-rb750.o
-+obj-$(CONFIG_LEDS_NU801)                += leds-nu801.o
++obj-$(CONFIG_LEDS_NU801)		+= leds-nu801.o
  obj-$(CONFIG_LEDS_NS2)			+= leds-ns2.o
  obj-$(CONFIG_LEDS_NETXBIG)		+= leds-netxbig.o
  obj-$(CONFIG_LEDS_ASIC3)		+= leds-asic3.o
@@ -446,8 +449,8 @@
 +	int num_leds;		/* Number of LEDs in the chain */
 +	unsigned cki;		/* GPIO pin for CKI */
 +	unsigned sdi;		/* GPIO pin for SDI */
-+ int lei;		/* GPIO pin for LEI; < 0 if none */
-+ u32 ndelay;		/* Delay in nanoseconds */
++	int lei;		/* GPIO pin for LEI; < 0 if none */
++	u32 ndelay;		/* Delay in nanoseconds */
 +	enum led_brightness init_brightness[3]; /* Default rgb state */
 +#ifdef CONFIG_LEDS_TRIGGERS
 +	const char* default_trigger; /* default trigger */
