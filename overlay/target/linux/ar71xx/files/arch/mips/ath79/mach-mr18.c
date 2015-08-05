@@ -126,29 +126,13 @@ static struct platform_device tricolor_leds = {
 #define ETH_SGMII_SERDES_PLL_REFCLK_SEL_MASK                         0x00000002
 #define ETH_SGMII_SERDES_EN_PLL_MASK                                 0x00000001
 
-static void qca955x_gmac_sgmii_res_cal(void)
+static unsigned int mr18_extract_sgmii_res_cal(void)
 {
-	unsigned int read_data;
 	unsigned int reversed_sgmii_value;
 
 	reversed_sgmii_value = 0xe;
 
-	/* To Check the locking of the SGMII PLL */
-	read_data = (ath_reg_rd(SGMII_SERDES_ADDRESS) &
-		~SGMII_SERDES_RES_CALIBRATION_MASK) |
-		SGMII_SERDES_RES_CALIBRATION_SET(reversed_sgmii_value);
-	ath_reg_wr(SGMII_SERDES_ADDRESS, read_data);
-
-	ath_reg_wr(ETH_SGMII_SERDES_ADDRESS,
-		ETH_SGMII_SERDES_EN_LOCK_DETECT_MASK |
-		ETH_SGMII_SERDES_PLL_REFCLK_SEL_MASK |
-		ETH_SGMII_SERDES_EN_PLL_MASK);
-
-	ath79_device_reset_clear(QCA953X_RESET_ETH_SWITCH_ANALOG);
-	ath79_device_reset_clear(QCA953X_RESET_ETH_SWITCH);
-
-	while (!(ath_reg_rd(SGMII_SERDES_ADDRESS) &
-		SGMII_SERDES_LOCK_DETECT_STATUS_MASK));
+	return reversed_sgmii_value;
 }
 
 static void __init mr18_setup(void)
@@ -174,7 +158,7 @@ static void __init mr18_setup(void)
 	 * Figuring this out took such a long time, that we want to
 	 * point this quirk out, before someone wants to remove it.
 	 */
-	qca955x_gmac_sgmii_res_cal();
+	ath79_setup_qca955x_eth_serdes_cal(mr18_extract_sgmii_res_cal());
 
 	/* GMAC0 is connected to an Atheros AR8035-A */
 	ath79_init_mac(ath79_eth0_data.mac_addr, NULL, 0);
