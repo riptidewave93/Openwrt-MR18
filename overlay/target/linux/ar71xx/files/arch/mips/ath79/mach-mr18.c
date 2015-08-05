@@ -91,47 +91,100 @@ static struct platform_device tricolor_leds = {
 	.dev.platform_data = &tricolor_led_data,
 };
 
-/*
- * Copied from U-Boot Atheros LSDK-9.5.5.36
- */
+#define OTP_INTF2_ADDRESS				0x18131008
+#define OTP_LDO_CONTROL_ADDRESS				0x18131024
+#define OTP_LDO_STATUS_ADDRESS				0x1813102c
+
+#define OTP_LDO_STATUS_POWER_ON				BIT(0)
+
+#define OTP_MEM_0_ADDRESS				0x18130000
+#define OTP_STATUS0_EFUSE_READ_DATA_VALID		BIT(2)
+
+#define OTP_STATUS0_ADDRESS				0x18131018
+#define OTP_STATUS1_ADDRESS				0x1813101c
 
 #define ath_reg_rd(_phys)       (*(volatile uint32_t *)KSEG1ADDR(_phys))
 
 #define ath_reg_wr_nf(_phys, _val) \
-        ((*(volatile uint32_t *)KSEG1ADDR(_phys)) = (_val))
+	((*(volatile uint32_t *)KSEG1ADDR(_phys)) = (_val))
 
 #define ath_reg_wr(_phys, _val) do {    \
-        ath_reg_wr_nf(_phys, _val);     \
-        ath_reg_rd(_phys);              \
+	ath_reg_wr_nf(_phys, _val);     \
+	ath_reg_rd(_phys);              \
 } while(0)
 
-#define ath_reg_rmw_set(_reg, _mask)    do {                    \
-        ath_reg_wr((_reg), (ath_reg_rd((_reg)) | (_mask)));     \
-        ath_reg_rd((_reg));                                     \
-} while(0)
-
-#define ath_reg_rmw_clear(_reg, _mask)    do {                    \
-        ath_reg_wr((_reg), (ath_reg_rd((_reg)) & ~(_mask)));     \
-        ath_reg_rd((_reg));                                     \
-} while(0)
-
-#define SGMII_SERDES_ADDRESS                                         0x18070018
-#define SGMII_SERDES_RES_CALIBRATION_LSB                             23
-#define SGMII_SERDES_RES_CALIBRATION_MASK                            0x07800000
-#define SGMII_SERDES_RES_CALIBRATION_SET(x)                          (((x) << SGMII_SERDES_RES_CALIBRATION_LSB) & SGMII_SERDES_RES_CALIBRATION_MASK)
-#define SGMII_SERDES_LOCK_DETECT_STATUS_MASK                         0x00008000
-
-#define ETH_SGMII_SERDES_ADDRESS                                     0x1805004c
-#define ETH_SGMII_SERDES_EN_LOCK_DETECT_MASK                         0x00000004
-#define ETH_SGMII_SERDES_PLL_REFCLK_SEL_MASK                         0x00000002
-#define ETH_SGMII_SERDES_EN_PLL_MASK                                 0x00000001
 
 static unsigned int mr18_extract_sgmii_res_cal(void)
 {
 	unsigned int reversed_sgmii_value;
 
-	reversed_sgmii_value = 0xe;
+#ifndef CALC_SGMII_CAL_VALUE
+	unsigned int read_data_otp, otp_value, otp_per_val, rbias_per;
+	unsigned int rbias_pos_or_neg, res_cal_val;
+	unsigned int sgmii_pos, sgmii_res_cal_value;
 
+	ath_reg_wr(OTP_INTF2_ADDRESS, 0x7d);
+	ath_reg_wr(OTP_LDO_CONTROL_ADDRESS, 0x0);
+
+	while (ath_reg_rd(OTP_LDO_STATUS_ADDRESS) & OTP_LDO_STATUS_POWER_ON);
+	read_data = ath_reg_rd(OTP_MEM_0_ADDRESS + 4);
+	while (!(ath_reg_rd(OTP_STATUS0_ADDRESS) & OTP_STATUS0_EFUSE_READ_DATA_VALID));
+
+	read_data = read_data_otp = ath_reg_rd(OTP_STATUS1_ADDRESS);
+
+	if (!(read_data & 0x1fff)) {
+		unsigned int *address_spi = (unsigned int *)0xbffffffc;
+		unsigned int read_data_spi;
+
+		read_data_spi = *(address_spi);
+		if ((read_data_spi & 0xffff0000) == 0x5ca10000)
+			read_data = read_data_spi;
+	}
+
+	if (read_data & 0x00001000)
+		otp_value = (read_data & 0xfc0) >> 6;
+	else
+		otp_value = read_data & 0x3f;
+	}
+
+	if (otp_value > 31) {
+		otp_per_val = 63 - otp_value;
+		rbias_pos_or_neg = 1;
+	} else {
+		otp_per_val = otp_value;
+		rbias_pos_or_neg = 0;
+	}
+
+	rbias_per = otp_per_val * 15;
+
+	if (rbias_pos_or_neg == 1) {
+		res_cal_val = (rbias_per + 34) / 21;
+		sgmii_pos = 1;
+	} else {
+		if (rbias_per > 34) {
+			res_cal_val = (rbias_per - 34) / 21;
+			sgmii_pos = 0;
+		} else {
+			res_cal_val = (34 - rbias_per) / 21;
+			sgmii_pos = 1;
+		}
+	}
+
+	if (sgmii_pos == 1)
+		sgmii_res_cal_value = 8 + res_cal_val;
+	else
+		sgmii_res_cal_value = 8 - res_cal_val;
+
+	reversed_sgmii_value = 0;
+	reversed_sgmii_value |= (sgmii_res_cal_value & 8) >> 3;
+	reversed_sgmii_value |= (sgmii_res_cal_value & 4) >> 1;
+	reversed_sgmii_value |= (sgmii_res_cal_value & 2) << 1;
+	reversed_sgmii_value |= (sgmii_res_cal_value & 1) << 3;
+	reversed_sgmii_value &= 0xf;
+#else
+	reversed_sgmii_value = 0xe;
+#endif
+	printk(KERN_INFO "SGMII cal value = 0x%x\n", reversed_sgmii_value);
 	return reversed_sgmii_value;
 }
 
