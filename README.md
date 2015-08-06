@@ -17,15 +17,13 @@ Images by default will be moved to the root dir of the repo.
 To Do
 -----
 ##### MR18
-  1. Cleanup NIC Init (Make a proper patch)
-  * Create Device Images
+  1. Create Device Images
     1. Port kernel builder to C from bash
-    * Figure out NAND layout for release
-      * Figure out how to handle MAC information
     * Create image generation code for ./target/linux/ar71xx/image/Makefile
     * Enable/Setup Sysupgrade
+  * Fixup WLAN2 MAC
   * Move LED Driver to device driver instead of kernel patch
-  * Possibly cleanup Caldata generation code
+  * Possibly cleanup caldata generation code
 
 Working
 -----
@@ -35,8 +33,8 @@ Working
   * NAND Read/Write
   * Basic Sysfs Integration
   * Nandloader bootable images
-  * Ethernet (Very dirty patch atm)
-  * Caldata Generation using nanddump (needed for sysupgrade)
+  * Ethernet
+  * Caldata Generation using nanddump
 
 Notice
 ------

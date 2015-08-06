@@ -91,64 +91,29 @@ static struct platform_device tricolor_leds = {
 	.dev.platform_data = &tricolor_led_data,
 };
 
-/*
- * Copied from U-Boot Atheros LSDK-9.5.5.36
- */
-
-#define ath_reg_rd(_phys)       (*(volatile uint32_t *)KSEG1ADDR(_phys))
-
-#define ath_reg_wr_nf(_phys, _val) \
-        ((*(volatile uint32_t *)KSEG1ADDR(_phys)) = (_val))
-
-#define ath_reg_wr(_phys, _val) do {    \
-        ath_reg_wr_nf(_phys, _val);     \
-        ath_reg_rd(_phys);              \
-} while(0)
-
-#define ath_reg_rmw_set(_reg, _mask)    do {                    \
-        ath_reg_wr((_reg), (ath_reg_rd((_reg)) | (_mask)));     \
-        ath_reg_rd((_reg));                                     \
-} while(0)
-
-#define ath_reg_rmw_clear(_reg, _mask)    do {                    \
-        ath_reg_wr((_reg), (ath_reg_rd((_reg)) & ~(_mask)));     \
-        ath_reg_rd((_reg));                                     \
-} while(0)
-
-#define SGMII_SERDES_ADDRESS                                         0x18070018
-#define SGMII_SERDES_RES_CALIBRATION_LSB                             23
-#define SGMII_SERDES_RES_CALIBRATION_MASK                            0x07800000
-#define SGMII_SERDES_RES_CALIBRATION_SET(x)                          (((x) << SGMII_SERDES_RES_CALIBRATION_LSB) & SGMII_SERDES_RES_CALIBRATION_MASK)
-#define SGMII_SERDES_LOCK_DETECT_STATUS_MASK                         0x00008000
-
-#define ETH_SGMII_SERDES_ADDRESS                                     0x1805004c
-#define ETH_SGMII_SERDES_EN_LOCK_DETECT_MASK                         0x00000004
-#define ETH_SGMII_SERDES_PLL_REFCLK_SEL_MASK                         0x00000002
-#define ETH_SGMII_SERDES_EN_PLL_MASK                                 0x00000001
-
-static void qca955x_gmac_sgmii_res_cal(void)
+/* Based on code from U-Boot Atheros LSDK-9.5.5.36 */
+static void mr18_gmac_sgmii_res_cal(void)
 {
-	unsigned int read_data;
-	unsigned int reversed_sgmii_value;
+	void __iomem *base;
+	u32 t;
+	unsigned int serdes_sgmii_cal = 0x1f010116; /* Base + RES_CAL_MASK(0x7 << 23) */
+	unsigned int serdes_eth_sgmii_cal = 0x7; /* EN_LOCK_DETECT + PLL_REFCLK_SEL + EN_PLL */
 
-	reversed_sgmii_value = 0xe;
+	/* Serdes SGMII calibration */
+	base = ioremap(QCA955X_GMAC_BASE, QCA955X_GMAC_SIZE);
+	t = serdes_sgmii_cal;
+	__raw_writel(t, base + QCA955X_SGMII_SERDES_CFG);
+	iounmap(base);
 
-	/* To Check the locking of the SGMII PLL */
-	read_data = (ath_reg_rd(SGMII_SERDES_ADDRESS) &
-		~SGMII_SERDES_RES_CALIBRATION_MASK) |
-		SGMII_SERDES_RES_CALIBRATION_SET(reversed_sgmii_value);
-	ath_reg_wr(SGMII_SERDES_ADDRESS, read_data);
+	/* Serdes ETH cal */
+	base = ioremap(AR71XX_PLL_BASE, AR71XX_PLL_SIZE);
+	t = serdes_eth_sgmii_cal;
+	__raw_writel(t, base + QCA955X_ETH_SGMII_SERDES_CFG);
+	iounmap(base);
 
-	ath_reg_wr(ETH_SGMII_SERDES_ADDRESS,
-		ETH_SGMII_SERDES_EN_LOCK_DETECT_MASK |
-		ETH_SGMII_SERDES_PLL_REFCLK_SEL_MASK |
-		ETH_SGMII_SERDES_EN_PLL_MASK);
-
-	ath79_device_reset_clear(QCA953X_RESET_ETH_SWITCH_ANALOG);
-	ath79_device_reset_clear(QCA953X_RESET_ETH_SWITCH);
-
-	while (!(ath_reg_rd(SGMII_SERDES_ADDRESS) &
-		SGMII_SERDES_LOCK_DETECT_STATUS_MASK));
+	/* Reset SGMII */
+	ath79_device_reset_clear(QCA955X_RESET_SGMII_ANALOG);
+	ath79_device_reset_clear(QCA955X_RESET_SGMII);
 }
 
 static void __init mr18_setup(void)
@@ -174,7 +139,7 @@ static void __init mr18_setup(void)
 	 * Figuring this out took such a long time, that we want to
 	 * point this quirk out, before someone wants to remove it.
 	 */
-	qca955x_gmac_sgmii_res_cal();
+	mr18_gmac_sgmii_res_cal();
 
 	/* GMAC0 is connected to an Atheros AR8035-A */
 	ath79_init_mac(ath79_eth0_data.mac_addr, NULL, 0);
