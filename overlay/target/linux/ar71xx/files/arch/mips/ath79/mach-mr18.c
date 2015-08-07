@@ -117,8 +117,8 @@ static unsigned int mr18_extract_sgmii_res_cal(void)
 {
 	unsigned int reversed_sgmii_value;
 
-#ifndef CALC_SGMII_CAL_VALUE
-	unsigned int read_data_otp, otp_value, otp_per_val, rbias_per;
+#ifdef CALC_SGMII_CAL_VALUE
+	unsigned int read_data_otp, otp_value, otp_per_val, rbias_per, read_data;
 	unsigned int rbias_pos_or_neg, res_cal_val;
 	unsigned int sgmii_pos, sgmii_res_cal_value;
 
@@ -140,9 +140,9 @@ static unsigned int mr18_extract_sgmii_res_cal(void)
 			read_data = read_data_spi;
 	}
 
-	if (read_data & 0x00001000)
+	if (read_data & 0x00001000) {
 		otp_value = (read_data & 0xfc0) >> 6;
-	else
+	} else {
 		otp_value = read_data & 0x3f;
 	}
 
