@@ -7,7 +7,7 @@
 
 define Profile/MR18
 	NAME:=Meraki MR18
-	PACKAGES:=kmod-spi-gpio kmod-ath9k kmod-ledtrig-usbdev
+	PACKAGES:=kmod-spi-gpio kmod-ath9k
 endef
 
 define Profile/MR18/description

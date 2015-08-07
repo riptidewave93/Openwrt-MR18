@@ -26,7 +26,6 @@
 #include "dev-eth.h"
 #include "dev-gpio-buttons.h"
 #include "dev-leds-gpio.h"
-#include "dev-m25p80.h"
 #include "dev-nfc.h"
 #include "dev-wmac.h"
 #include "machtypes.h"
@@ -190,9 +189,6 @@ static unsigned int mr18_extract_sgmii_res_cal(void)
 
 static void __init mr18_setup(void)
 {
-	/* SPI - slot not populated, but functional when added! */
-	ath79_register_m25p80(NULL);
-
 	/* NAND */
 	ath79_nfc_set_ecc_mode(AR934X_NFC_ECC_SOFT_BCH);
 	ath79_register_nfc();
