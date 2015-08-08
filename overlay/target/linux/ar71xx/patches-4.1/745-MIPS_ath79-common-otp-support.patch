@@ -1,0 +1,301 @@
+--- a/arch/mips/ath79/dev-wmac.c	2015-08-08 15:19:43.884313800 +0200
++++ b/arch/mips/ath79/dev-wmac.c	2015-08-08 15:44:55.263053015 +0200
+@@ -207,91 +207,8 @@ static void qca956x_wmac_setup(void)
+ 		ath79_wmac_data.is_clk_25mhz = true;
+ }
+ 
+-static bool __init
+-ar93xx_wmac_otp_read_word(void __iomem *base, int addr, u32 *data)
+-{
+-	int timeout = 1000;
+-	u32 val;
+-
+-	__raw_readl(base + AR9300_OTP_BASE + (4 * addr));
+-	while (timeout--) {
+-		val = __raw_readl(base + AR9300_OTP_STATUS);
+-		if ((val & AR9300_OTP_STATUS_TYPE) == AR9300_OTP_STATUS_VALID)
+-			break;
+-
+-		udelay(10);
+-	}
+-
+-	if (!timeout)
+-		return false;
+-
+-	*data = __raw_readl(base + AR9300_OTP_READ_DATA);
+-	return true;
+-}
+-
+-static bool __init
+-ar93xx_wmac_otp_read(void __iomem *base, int addr, u8 *dest, int len)
+-{
+-	u32 data;
+-	int i;
+-
+-	for (i = 0; i < len; i++) {
+-		int offset = 8 * ((addr - i) % 4);
+-
+-		if (!ar93xx_wmac_otp_read_word(base, (addr - i) / 4, &data))
+-			return false;
+-
+-		dest[i] = (data >> offset) & 0xff;
+-	}
+-
+-	return true;
+-}
+-
+-static bool __init
+-ar93xx_wmac_otp_uncompress(void __iomem *base, int addr, int len, u8 *dest,
+-			   int dest_start, int dest_len)
+-{
+-	int dest_bytes = 0;
+-	int offset = 0;
+-	int end = addr - len;
+-	u8 hdr[2];
+-
+-	while (addr > end) {
+-		if (!ar93xx_wmac_otp_read(base, addr, hdr, 2))
+-			return false;
+-
+-		addr -= 2;
+-		offset += hdr[0];
+-
+-		if (offset <= dest_start + dest_len &&
+-		    offset + len >= dest_start) {
+-			int data_offset = 0;
+-			int dest_offset = 0;
+-			int copy_len;
+-
+-			if (offset < dest_start)
+-				data_offset = dest_start - offset;
+-			else
+-				dest_offset = offset - dest_start;
+-
+-			copy_len = len - data_offset;
+-			if (copy_len > dest_len - dest_offset)
+-				copy_len = dest_len - dest_offset;
+-
+-			ar93xx_wmac_otp_read(base, addr - data_offset,
+-					     dest + dest_offset,
+-					     copy_len);
+-
+-			dest_bytes += copy_len;
+-		}
+-		addr -= hdr[1];
+-	}
+-	return !!dest_bytes;
+-}
+-
+ bool __init ar93xx_wmac_read_mac_address(u8 *dest)
+ {
+-	void __iomem *base;
+ 	bool ret = false;
+ 	int addr = 0x1ff;
+ 	unsigned int len;
+@@ -300,10 +217,8 @@ bool __init ar93xx_wmac_read_mac_address
+ 	u8 mac[6] = { 0x00, 0x02, 0x03, 0x04, 0x05, 0x06 };
+ 	int mac_start = 2, mac_end = 8;
+ 
+-	BUG_ON(!soc_is_ar933x() && !soc_is_ar934x());
+-	base = ioremap_nocache(AR933X_WMAC_BASE, AR933X_WMAC_SIZE);
+ 	while (addr > sizeof(hdr)) {
+-		if (!ar93xx_wmac_otp_read(base, addr, hdr, sizeof(hdr)))
++		if (!ar93xx_otp_read(addr, hdr, sizeof(hdr)))
+ 			break;
+ 
+ 		if (hdr_u32 == 0 || hdr_u32 == ~0)
+@@ -317,12 +232,12 @@ bool __init ar93xx_wmac_read_mac_address
+ 			if (len < mac_end)
+ 				break;
+ 
+-			ar93xx_wmac_otp_read(base, addr - mac_start, mac, 6);
++			ar93xx_otp_read(addr - mac_start, mac, 6);
+ 			ret = true;
+ 			break;
+ 		case 3:
+-			ret |= ar93xx_wmac_otp_uncompress(base, addr, len, mac,
+-							  mac_start, 6);
++			ret |= ar93xx_otp_uncompress(addr, len, mac,
++						     mac_start, 6);
+ 			break;
+ 		default:
+ 			break;
+@@ -331,7 +246,6 @@ bool __init ar93xx_wmac_read_mac_address
+ 		addr -= len + 2;
+ 	}
+ 
+-	iounmap(base);
+ 	if (ret)
+ 		memcpy(dest, mac, 6);
+ 
+--- /dev/null	2015-08-08 08:38:59.872109823 +0200
++++ b/arch/mips/ath79/otp.c	2015-08-08 15:40:06.155061856 +0200
+@@ -0,0 +1,133 @@
++/*
++ *  Atheros AR933X/AR934X SoC built-in OTP device support
++ *
++ *  Copyright (C) 2010-2011 Jaiganesh Narayanan <jnarayanan@atheros.com>
++ *  Copyright (C) 2008-2011 Gabor Juhos <juhosg@openwrt.org>
++ *  Copyright (C) 2008 Imre Kaloz <kaloz@openwrt.org>
++ *
++ *  Parts of this file are based on Atheros 2.6.15/2.6.31 BSP
++ *
++ *  This program is free software; you can redistribute it and/or modify it
++ *  under the terms of the GNU General Public License version 2 as published
++ *  by the Free Software Foundation.
++ */
++
++#include <linux/init.h>
++#include <linux/delay.h>
++#include <linux/ath9k_platform.h>
++
++#include <asm/mach-ath79/ath79.h>
++#include <asm/mach-ath79/ar71xx_regs.h>
++#include "common.h"
++
++static void __iomem *ar93xx_otp_get_base(void)
++{
++	return ioremap_nocache(AR933X_WMAC_BASE, AR933X_WMAC_SIZE);
++}
++
++static bool __init
++ar93xx_otp_read_word(void __iomem *base, int addr, u32 *data)
++{
++	int timeout = 1000;
++	u32 val;
++
++	BUG_ON(!soc_is_ar933x() && !soc_is_ar934x());
++
++	__raw_readl(base + AR9300_OTP_BASE + (4 * addr));
++	while (timeout--) {
++		val = __raw_readl(base + AR9300_OTP_STATUS);
++		if ((val & AR9300_OTP_STATUS_TYPE) == AR9300_OTP_STATUS_VALID)
++			break;
++
++		udelay(10);
++	}
++
++	if (!timeout)
++		return false;
++
++	*data = __raw_readl(base + AR9300_OTP_READ_DATA);
++	return true;
++}
++
++static bool __init
++__ar93xx_otp_read(void __iomem *base, int addr, u8 *dest, int len)
++{
++	u32 data;
++	int i;
++
++	for (i = 0; i < len; i++) {
++		int offset = 8 * ((addr - i) % 4);
++
++		if (!ar93xx_otp_read_word(base, (addr - i) / 4, &data))
++			return false;
++
++		dest[i] = (data >> offset) & 0xff;
++	}
++
++	return true;
++}
++
++bool __init
++ar93xx_otp_read(int addr, u8 *dest, int len)
++{
++	void __iomem *base;
++	bool result;
++
++	base = ar93xx_otp_get_base();
++	if (!base)
++		return false;
++
++	result = __ar93xx_otp_read(base, addr, dest, len);
++	iounmap(base);
++	return result;
++}
++
++bool __init
++ar93xx_otp_uncompress(int addr, int len, u8 *dest,
++		       int dest_start, int dest_len)
++{
++	void __iomem *base;
++	int dest_bytes = 0;
++	int offset = 0;
++	int end = addr - len;
++	u8 hdr[2];
++
++	base = ar93xx_otp_get_base();
++	if (!base)
++		return false;
++
++	while (addr > end) {
++		if (!__ar93xx_otp_read(base, addr, hdr, 2)) {
++			iounmap(base);
++			return false;
++		}
++
++		addr -= 2;
++		offset += hdr[0];
++
++		if (offset <= dest_start + dest_len &&
++		    offset + len >= dest_start) {
++			int data_offset = 0;
++			int dest_offset = 0;
++			int copy_len;
++
++			if (offset < dest_start)
++				data_offset = dest_start - offset;
++			else
++				dest_offset = offset - dest_start;
++
++			copy_len = len - data_offset;
++			if (copy_len > dest_len - dest_offset)
++				copy_len = dest_len - dest_offset;
++
++			__ar93xx_otp_read(base, addr - data_offset,
++					  dest + dest_offset,
++					  copy_len);
++
++			dest_bytes += copy_len;
++		}
++		addr -= hdr[1];
++	}
++	iounmap(base);
++	return !!dest_bytes;
++}
+--- a/arch/mips/ath79/common.h	2015-08-08 15:50:21.150364561 +0200
++++ b/arch/mips/ath79/common.h	2015-08-08 15:49:54.840850711 +0200
+@@ -31,4 +31,8 @@ void ath79_gpio_output_select(unsigned g
+ int ath79_gpio_direction_select(unsigned gpio, bool oe);
+ void ath79_gpio_init(void);
+ 
++bool ar93xx_otp_read(int addr, u8 *dest, int len);
++bool ar93xx_otp_uncompress(int addr, int len, u8 *dest,
++			    int dest_start, int dest_len);
++
+ #endif /* __ATH79_COMMON_H */
+--- a/arch/mips/ath79/Makefile	2015-08-08 16:06:26.015868985 +0200
++++ b/arch/mips/ath79/Makefile	2015-08-08 16:06:52.482046606 +0200
+@@ -32,6 +32,7 @@ obj-$(CONFIG_ATH79_DEV_WMAC)		+= dev-wma
+ # Miscellaneous objects
+ #
+ obj-$(CONFIG_ATH79_NVRAM)		+= nvram.o
++obj-$(CONFIG_ATH79_OTP)			+= otp.o
+ obj-$(CONFIG_ATH79_PCI_ATH9K_FIXUP)	+= pci-ath9k-fixup.o
+ obj-$(CONFIG_ATH79_ROUTERBOOT)		+= routerboot.o
+ 
+--- a/arch/mips/ath79/Kconfig	2015-08-08 16:03:54.628666337 +0200
++++ b/arch/mips/ath79/Kconfig	2015-08-08 16:05:59.183031472 +0200
+@@ -1401,6 +1401,11 @@ config ATH79_DEV_USB
+ 
+ config ATH79_DEV_WMAC
+ 	depends on (SOC_AR913X || SOC_AR933X || SOC_AR934X || SOC_QCA953X || SOC_QCA955X || SOC_QCA956X)
++	select ATH79_OTP
++	def_bool n
++
++config ATH79_OTP
++	depends on (SOC_AR933X || SOC_AR934X || SOC_QCA953X || SOC_QCA955X || SOC_QCA956X)
+ 	def_bool n
+ 
+ config ATH79_NVRAM
