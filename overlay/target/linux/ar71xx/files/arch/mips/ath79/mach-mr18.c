@@ -142,7 +142,6 @@ static unsigned int mr18_extract_sgmii_res_cal(void)
 	reversed_sgmii_value |= (sgmii_res_cal_value & 4) >> 1;
 	reversed_sgmii_value |= (sgmii_res_cal_value & 2) << 1;
 	reversed_sgmii_value |= (sgmii_res_cal_value & 1) << 3;
-	printk(KERN_INFO "SGMII cal value = 0x%x\n", reversed_sgmii_value);
 	return reversed_sgmii_value;
 }
 
@@ -192,5 +191,12 @@ static void __init mr18_setup(void)
 	/* WiFi */
 	ath79_register_wmac_simple();
 	ap91_pci_init_simple();
+
+	{
+		u8 buf[256];
+		ar93xx_otp_read(0, buf, sizeof(buf));
+		print_hex_dump_bytes("OTP:", DUMP_PREFIX_OFFSET, buf, sizeof(buf));
+	}
+
 }
 MIPS_MACHINE(ATH79_MACH_MR18, "MR18", "Meraki MR18", mr18_setup);
