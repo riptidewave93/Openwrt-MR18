@@ -53,16 +53,16 @@
 +	     QCA955X_SGMII_SERDES_RES_CALIBRATION_SHIFT;
 +	__raw_writel(t, ethbase + QCA955X_GMAC_REG_SGMII_SERDES);
 +
-+        __raw_writel(QCA955X_PLL_ETH_SGMII_SERDES_LOCK_DETECT |
++	__raw_writel(QCA955X_PLL_ETH_SGMII_SERDES_LOCK_DETECT |
 +		     QCA955X_PLL_ETH_SGMII_SERDES_PLL_REFCLK |
 +		     QCA955X_PLL_ETH_SGMII_SERDES_EN_PLL,
 +		     pllbase + QCA955X_PLL_ETH_SGMII_SERDES_REG);
 +
-+        ath79_device_reset_clear(QCA955X_RESET_SGMII_ANALOG);
-+        ath79_device_reset_clear(QCA955X_RESET_SGMII);
++	ath79_device_reset_clear(QCA955X_RESET_SGMII_ANALOG);
++	ath79_device_reset_clear(QCA955X_RESET_SGMII);
 +
-+        while (!(__raw_readl(ethbase + QCA955X_GMAC_REG_SGMII_SERDES) &
-+	        QCA955X_SGMII_SERDES_LOCK_DETECT_STATUS));
++	while (!(__raw_readl(ethbase + QCA955X_GMAC_REG_SGMII_SERDES) &
++		QCA955X_SGMII_SERDES_LOCK_DETECT_STATUS));
 +
 +	iounmap(ethbase);
 +	iounmap(pllbase);
