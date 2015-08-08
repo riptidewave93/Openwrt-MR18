@@ -1,6 +1,6 @@
 --- a/arch/mips/ath79/Kconfig
 +++ b/arch/mips/ath79/Kconfig
-@@ -824,6 +824,16 @@ config ATH79_MACH_MR16
+@@ -824,6 +824,17 @@ config ATH79_MACH_MR16
         select ATH79_DEV_M25P80
         select ATH79_DEV_WMAC
 
@@ -13,6 +13,7 @@
 +	select ATH79_DEV_LEDS_GPIO
 +	select ATH79_DEV_NFC
 +	select ATH79_DEV_WMAC
++	select ATH79_OTP
 +
  config ATH79_MACH_MR600
         bool "OpenMesh MR600 board support"
