@@ -164,7 +164,7 @@
 +	int timeout = 1000;
 +	u32 val;
 +
-+	BUG_ON(!soc_is_ar933x() && !soc_is_ar934x());
++	BUG_ON(!soc_is_ar933x() && !soc_is_ar934x() && !soc_is_qca955x());
 +
 +	__raw_readl(base + AR9300_OTP_BASE + (4 * addr));
 +	while (timeout--) {
