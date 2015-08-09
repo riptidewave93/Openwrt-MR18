@@ -90,15 +90,46 @@ static struct platform_device tricolor_leds = {
 	.dev.platform_data = &tricolor_led_data,
 };
 
+#define OTP_INTF2_ADDRESS				0x18131008
+#define OTP_LDO_CONTROL_ADDRESS				0x18131024
+#define OTP_LDO_STATUS_ADDRESS				0x1813102c
+
+#define OTP_LDO_STATUS_POWER_ON				BIT(0)
+
+#define OTP_MEM_0_ADDRESS				0x18130000
+#define OTP_STATUS0_EFUSE_READ_DATA_VALID		BIT(2)
+
+#define OTP_STATUS0_ADDRESS				0x18131018
+#define OTP_STATUS1_ADDRESS				0x1813101c
+
+#define ath_reg_rd(_phys)       (*(volatile uint32_t *)KSEG1ADDR(_phys))
+
+#define ath_reg_wr_nf(_phys, _val) \
+	((*(volatile uint32_t *)KSEG1ADDR(_phys)) = (_val))
+
+#define ath_reg_wr(_phys, _val) do {    \
+	ath_reg_wr_nf(_phys, _val);     \
+	ath_reg_rd(_phys);              \
+} while(0)
+
+
 static unsigned int mr18_extract_sgmii_res_cal(void)
 {
 	unsigned int reversed_sgmii_value;
-	unsigned int otp_value, otp_per_val, rbias_per, read_data;
+
+	unsigned int read_data_otp, otp_value, otp_per_val, rbias_per, read_data;
 	unsigned int rbias_pos_or_neg, res_cal_val;
 	unsigned int sgmii_pos, sgmii_res_cal_value;
-	int sgmii_sign = 0;
 
-	ar93xx_otp_read(4, (u8 *) &read_data, sizeof(read_data));
+	ath_reg_wr(OTP_INTF2_ADDRESS, 0x7d);
+	ath_reg_wr(OTP_LDO_CONTROL_ADDRESS, 0x0);
+
+	while (ath_reg_rd(OTP_LDO_STATUS_ADDRESS) & OTP_LDO_STATUS_POWER_ON);
+	read_data = ath_reg_rd(OTP_MEM_0_ADDRESS + 4);
+	while (!(ath_reg_rd(OTP_STATUS0_ADDRESS) & OTP_STATUS0_EFUSE_READ_DATA_VALID));
+
+	read_data = read_data_otp = ath_reg_rd(OTP_STATUS1_ADDRESS);
+
 	if (!(read_data & 0x1fff)) {
 		unsigned int *address_spi = (unsigned int *)0xbffffffc;
 		unsigned int read_data_spi;
@@ -126,22 +157,29 @@ static unsigned int mr18_extract_sgmii_res_cal(void)
 
 	if (rbias_pos_or_neg == 1) {
 		res_cal_val = (rbias_per + 34) / 21;
-		sgmii_pos = -1;
+		sgmii_pos = 1;
 	} else {
 		if (rbias_per > 34) {
 			res_cal_val = (rbias_per - 34) / 21;
-			sgmii_pos = 1;
+			sgmii_pos = 0;
 		} else {
 			res_cal_val = (34 - rbias_per) / 21;
-			sgmii_pos = -1;
+			sgmii_pos = 1;
 		}
 	}
 
-	sgmii_res_cal_value = (8 + sgmii_sign * res_cal_val) & 0xf;
-	reversed_sgmii_value = (sgmii_res_cal_value & 8) >> 3;
+	if (sgmii_pos == 1)
+		sgmii_res_cal_value = 8 + res_cal_val;
+	else
+		sgmii_res_cal_value = 8 - res_cal_val;
+
+	reversed_sgmii_value = 0;
+	reversed_sgmii_value |= (sgmii_res_cal_value & 8) >> 3;
 	reversed_sgmii_value |= (sgmii_res_cal_value & 4) >> 1;
 	reversed_sgmii_value |= (sgmii_res_cal_value & 2) << 1;
 	reversed_sgmii_value |= (sgmii_res_cal_value & 1) << 3;
+	reversed_sgmii_value &= 0xf;
+	printk(KERN_INFO "SGMII cal value = 0x%x\n", reversed_sgmii_value);
 	return reversed_sgmii_value;
 }
 
@@ -191,12 +229,5 @@ static void __init mr18_setup(void)
 	/* WiFi */
 	ath79_register_wmac_simple();
 	ap91_pci_init_simple();
-
-	{
-		u8 buf[256];
-		ar93xx_otp_read(0, buf, sizeof(buf));
-		print_hex_dump_bytes("OTP:", DUMP_PREFIX_OFFSET, buf, sizeof(buf));
-	}
-
 }
 MIPS_MACHINE(ATH79_MACH_MR18, "MR18", "Meraki MR18", mr18_setup);
