@@ -1788,10 +1788,6 @@ define Image/Build/MerakiNAND/initramfs
 	$(eval kernelsize=$(call mtdpartsize,kernel,$(4)))
 	$(call PatchKernel,$(2),$(3) $(4),"-initramfs")
 	# Add header logic here to modify $(KDIR_TMP)/vmlinux-initramfs-$(2)
-	# FIX ME!
-	# $(call Image/BuildLoaderPatched,$(2),elf,$(3) $(4),,-initramfs) #ELF for kexec
-	# $(CP) $(KDIR)/loader-$(2).elf $(BIN_DIR)/$(IMG_PREFIX)-$(2)-initramfs.elf
-	# END FIX ME!
 	$(CP) $(KDIR_TMP)/vmlinux-initramfs-$(2) $(BIN_DIR)/$(IMG_PREFIX)-$(2)-initramfs.bin
 endef
 
