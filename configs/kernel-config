@@ -2072,7 +2072,7 @@ CONFIG_HAVE_ARCH_KGDB=y
 # CONFIG_KGDB is not set
 CONFIG_EARLY_PRINTK=y
 CONFIG_CMDLINE_BOOL=y
-CONFIG_CMDLINE="console=ttyS0,115200 machtype=MR18 ubi.mtd=ubi mtdparts=spi0.0:256k(u-boot),-(unused);ar934x-nfc:512k(nandloader)ro,8M(part1),8M(part2),113664k(ubi),128k@130944k(odm-caldata)ro,16M@0x80000(kernel) rootfstype=squashfs,jffs2 noinitrd"
+CONFIG_CMDLINE="console=ttyS0,115200 machtype=MR18 ubi.mtd=ubi mtdparts=ar934x-nfc:512k(nandloader)ro,8M(kernel),8M(kernel_backup),113664k(ubi),128k@130944k(odm-caldata)ro rootfstype=squashfs,jffs2 noinitrd"
 # CONFIG_CMDLINE_OVERRIDE is not set
 # CONFIG_RUNTIME_DEBUG is not set
 # CONFIG_SPINLOCK_TEST is not set

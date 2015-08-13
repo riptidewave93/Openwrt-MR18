@@ -112,7 +112,7 @@ static struct platform_device tricolor_leds = {
 	ath_reg_rd(_phys);              \
 } while(0)
 
-
+/* ToDo: Move to own file/eth function */
 static unsigned int mr18_extract_sgmii_res_cal(void)
 {
 	unsigned int reversed_sgmii_value;
