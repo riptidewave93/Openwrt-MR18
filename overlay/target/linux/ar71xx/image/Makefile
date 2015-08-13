@@ -1135,7 +1135,7 @@ endef
 # $(4), unused here
 # $(5), suffix of kernel filename, e.g. -initramfs, or empty
 define Image/BuildLoaderPatched
-	$(call PatchKernelLzma,$(1),$(3))
+	$(call PatchKernelLzma,$(1),$(3),,$(5))
 	-rm -rf $(KDIR)/lzma-loader
 	$(LOADER_MAKE) LOADER=loader-$(1).$(2) \
 		LZMA_TEXT_START=0x80a00000 LOADADDR=0x80060000 \
@@ -1784,17 +1784,20 @@ Image/Build/CyberTANGZIP=$(call Image/Build/CyberTAN,$(1),$(2),$(3),$(4),$(5))
 Image/Build/CyberTANLZMA/buildkernel=$(call MkuImageLzma,$(2),$(3) $(4))
 Image/Build/CyberTANLZMA=$(call Image/Build/CyberTAN,$(1),$(2),$(3),$(4),$(5))
 
-# FIX ME!!!
-define Image/Build/MerakiNAND/Initramfs
+define Image/Build/MerakiNAND/initramfs
 	$(eval kernelsize=$(call mtdpartsize,kernel,$(4)))
-	$(call PatchKernel,$(2),$(3),"-initramfs")
-	$(CP) $(KDIR_TMP)/vmlinux-$(2)-initramfs $(BIN_DIR)/$(IMG_PREFIX)-$(2)-initramfs.bin
+	$(call PatchKernel,$(2),$(3) $(4),"-initramfs")
+	# Add header logic here to modify $(KDIR_TMP)/vmlinux-initramfs-$(2)
+	# FIX ME!
+	# $(call Image/BuildLoaderPatched,$(2),elf,$(3) $(4),,-initramfs) #ELF for kexec
+	# $(CP) $(KDIR)/loader-$(2).elf $(BIN_DIR)/$(IMG_PREFIX)-$(2)-initramfs.elf
+	# END FIX ME!
+	$(CP) $(KDIR_TMP)/vmlinux-initramfs-$(2) $(BIN_DIR)/$(IMG_PREFIX)-$(2)-initramfs.bin
 endef
-# END FIX ME!!!
 
 define Image/Build/MerakiNAND/buildkernel
 	$(eval kernelsize=$(call mtdpartsize,kernel,$(4)))
-	$(call PatchKernel,$(2),$(3),"")
+	$(call PatchKernel,$(2),$(3) $(4),"")
 	# Add header logic here to modify $(KDIR_TMP)/vmlinux-$(2)
 	$(CP) $(KDIR_TMP)/vmlinux-$(2) $(BIN_DIR)/$(IMG_PREFIX)-$(2)-kernel.bin
 
