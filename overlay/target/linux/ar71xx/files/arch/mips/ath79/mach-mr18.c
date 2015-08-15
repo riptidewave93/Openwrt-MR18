@@ -26,7 +26,6 @@
 #include "dev-eth.h"
 #include "dev-gpio-buttons.h"
 #include "dev-leds-gpio.h"
-#include "dev-m25p80.h"
 #include "dev-nfc.h"
 #include "dev-wmac.h"
 #include "machtypes.h"
@@ -91,36 +90,101 @@ static struct platform_device tricolor_leds = {
 	.dev.platform_data = &tricolor_led_data,
 };
 
-/* Based on code from U-Boot Atheros LSDK-9.5.5.36 */
-static void mr18_gmac_sgmii_res_cal(void)
+#define OTP_INTF2_ADDRESS				0x18131008
+#define OTP_LDO_CONTROL_ADDRESS				0x18131024
+#define OTP_LDO_STATUS_ADDRESS				0x1813102c
+
+#define OTP_LDO_STATUS_POWER_ON				BIT(0)
+
+#define OTP_MEM_0_ADDRESS				0x18130000
+#define OTP_STATUS0_EFUSE_READ_DATA_VALID		BIT(2)
+
+#define OTP_STATUS0_ADDRESS				0x18131018
+#define OTP_STATUS1_ADDRESS				0x1813101c
+
+#define ath_reg_rd(_phys)       (*(volatile uint32_t *)KSEG1ADDR(_phys))
+
+#define ath_reg_wr_nf(_phys, _val) \
+	((*(volatile uint32_t *)KSEG1ADDR(_phys)) = (_val))
+
+#define ath_reg_wr(_phys, _val) do {    \
+	ath_reg_wr_nf(_phys, _val);     \
+	ath_reg_rd(_phys);              \
+} while(0)
+
+/* ToDo: Move to own file/eth function */
+static unsigned int mr18_extract_sgmii_res_cal(void)
 {
-	void __iomem *base;
-	u32 t;
-	unsigned int serdes_sgmii_cal = 0x1f010116; /* Base + RES_CAL_MASK(0x7 << 23) */
-	unsigned int serdes_eth_sgmii_cal = 0x7; /* EN_LOCK_DETECT + PLL_REFCLK_SEL + EN_PLL */
+	unsigned int reversed_sgmii_value;
 
-	/* Serdes SGMII calibration */
-	base = ioremap(QCA955X_GMAC_BASE, QCA955X_GMAC_SIZE);
-	t = serdes_sgmii_cal;
-	__raw_writel(t, base + QCA955X_SGMII_SERDES_CFG);
-	iounmap(base);
+	unsigned int read_data_otp, otp_value, otp_per_val, rbias_per, read_data;
+	unsigned int rbias_pos_or_neg, res_cal_val;
+	unsigned int sgmii_pos, sgmii_res_cal_value;
 
-	/* Serdes ETH cal */
-	base = ioremap(AR71XX_PLL_BASE, AR71XX_PLL_SIZE);
-	t = serdes_eth_sgmii_cal;
-	__raw_writel(t, base + QCA955X_ETH_SGMII_SERDES_CFG);
-	iounmap(base);
+	ath_reg_wr(OTP_INTF2_ADDRESS, 0x7d);
+	ath_reg_wr(OTP_LDO_CONTROL_ADDRESS, 0x0);
 
-	/* Reset SGMII */
-	ath79_device_reset_clear(QCA955X_RESET_SGMII_ANALOG);
-	ath79_device_reset_clear(QCA955X_RESET_SGMII);
+	while (ath_reg_rd(OTP_LDO_STATUS_ADDRESS) & OTP_LDO_STATUS_POWER_ON);
+	read_data = ath_reg_rd(OTP_MEM_0_ADDRESS + 4);
+	while (!(ath_reg_rd(OTP_STATUS0_ADDRESS) & OTP_STATUS0_EFUSE_READ_DATA_VALID));
+
+	read_data = read_data_otp = ath_reg_rd(OTP_STATUS1_ADDRESS);
+
+	if (!(read_data & 0x1fff)) {
+		unsigned int *address_spi = (unsigned int *)0xbffffffc;
+		unsigned int read_data_spi;
+
+		read_data_spi = *(address_spi);
+		if ((read_data_spi & 0xffff0000) == 0x5ca10000)
+			read_data = read_data_spi;
+	}
+
+	if (read_data & 0x00001000) {
+		otp_value = (read_data & 0xfc0) >> 6;
+	} else {
+		otp_value = read_data & 0x3f;
+	}
+
+	if (otp_value > 31) {
+		otp_per_val = 63 - otp_value;
+		rbias_pos_or_neg = 1;
+	} else {
+		otp_per_val = otp_value;
+		rbias_pos_or_neg = 0;
+	}
+
+	rbias_per = otp_per_val * 15;
+
+	if (rbias_pos_or_neg == 1) {
+		res_cal_val = (rbias_per + 34) / 21;
+		sgmii_pos = 1;
+	} else {
+		if (rbias_per > 34) {
+			res_cal_val = (rbias_per - 34) / 21;
+			sgmii_pos = 0;
+		} else {
+			res_cal_val = (34 - rbias_per) / 21;
+			sgmii_pos = 1;
+		}
+	}
+
+	if (sgmii_pos == 1)
+		sgmii_res_cal_value = 8 + res_cal_val;
+	else
+		sgmii_res_cal_value = 8 - res_cal_val;
+
+	reversed_sgmii_value = 0;
+	reversed_sgmii_value |= (sgmii_res_cal_value & 8) >> 3;
+	reversed_sgmii_value |= (sgmii_res_cal_value & 4) >> 1;
+	reversed_sgmii_value |= (sgmii_res_cal_value & 2) << 1;
+	reversed_sgmii_value |= (sgmii_res_cal_value & 1) << 3;
+	reversed_sgmii_value &= 0xf;
+	printk(KERN_INFO "SGMII cal value = 0x%x\n", reversed_sgmii_value);
+	return reversed_sgmii_value;
 }
 
 static void __init mr18_setup(void)
 {
-	/* SPI - slot not populated, but functional when added! */
-	ath79_register_m25p80(NULL);
-
 	/* NAND */
 	ath79_nfc_set_ecc_mode(AR934X_NFC_ECC_SOFT_BCH);
 	ath79_register_nfc();
@@ -139,7 +203,7 @@ static void __init mr18_setup(void)
 	 * Figuring this out took such a long time, that we want to
 	 * point this quirk out, before someone wants to remove it.
 	 */
-	mr18_gmac_sgmii_res_cal();
+	ath79_setup_qca955x_eth_serdes_cal(mr18_extract_sgmii_res_cal());
 
 	/* GMAC0 is connected to an Atheros AR8035-A */
 	ath79_init_mac(ath79_eth0_data.mac_addr, NULL, 0);

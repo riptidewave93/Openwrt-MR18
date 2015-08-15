@@ -1135,7 +1135,7 @@ endef
 # $(4), unused here
 # $(5), suffix of kernel filename, e.g. -initramfs, or empty
 define Image/BuildLoaderPatched
-	$(call PatchKernelLzma,$(1),$(3))
+	$(call PatchKernelLzma,$(1),$(3),,$(5))
 	-rm -rf $(KDIR)/lzma-loader
 	$(LOADER_MAKE) LOADER=loader-$(1).$(2) \
 		LZMA_TEXT_START=0x80a00000 LOADADDR=0x80060000 \
@@ -1211,7 +1211,7 @@ dragino2_mtdlayout=mtdparts=spi0.0:256k(u-boot)ro,16000k(firmware),64k(config)ro
 hiwifi_hc6361_mtdlayout=mtdparts=spi0.0:64k(u-boot)ro,64k(bdinfo)ro,1280k(kernel),14848k(rootfs),64k(backup)ro,64k(art)ro,16128k@0x20000(firmware)
 mr12_mtdlayout=mtdparts=spi0.0:256k(u-boot)ro,256k(u-boot-env)ro,13440k(rootfs),2304k(kernel),128k(art)ro,15744k@0x80000(firmware)
 mr16_mtdlayout=mtdparts=spi0.0:256k(u-boot)ro,256k(u-boot-env)ro,13440k(rootfs),2304k(kernel),128k(art)ro,15744k@0x80000(firmware)
-mr18_mtdlayout=mtdparts=spi0.0:256k(u-boot),-(unused);ar934x-nfc:512k(nandloader)ro,8M(part1),8M(part2),113664k(ubi),128k@130944k(odm-caldata)ro,16M@0x80000(kernel)
+mr18_mtdlayout=mtdparts=ar934x-nfc:512k(nandloader)ro,8M(kernel),8M(kernel_backup),113664k(ubi),128k@130944k(odm-caldata)ro
 pb92_mtdlayout=mtdparts=spi0.0:256k(u-boot)ro,64k(u-boot-env)ro,2752k(rootfs),896k(kernel),64k(nvram),64k(art)ro,3648k@0x50000(firmware)
 planex_mtdlayout=mtdparts=spi0.0:256k(u-boot)ro,64k(u-boot-env)ro,7744k(firmware),128k(art)ro
 ubntxm_mtdlayout=mtdparts=spi0.0:256k(u-boot)ro,64k(u-boot-env)ro,7552k(firmware),256k(cfg)ro,64k(EEPROM)ro
@@ -1784,30 +1784,29 @@ Image/Build/CyberTANGZIP=$(call Image/Build/CyberTAN,$(1),$(2),$(3),$(4),$(5))
 Image/Build/CyberTANLZMA/buildkernel=$(call MkuImageLzma,$(2),$(3) $(4))
 Image/Build/CyberTANLZMA=$(call Image/Build/CyberTAN,$(1),$(2),$(3),$(4),$(5))
 
-define	Image/Build/MerakiNAND/buildkernel
-	$(eval kernelsize=$(call mtdpartsize,kernel,$(5)))
-	$(call MkuImageLzma,$(2),$(3) $(5) $(6))
+define Image/Build/MerakiNAND/initramfs
+	$(eval kernelsize=$(call mtdpartsize,kernel,$(4)))
+	$(call PatchKernel,$(2),$(3) $(4),"-initramfs")
+	# Add header logic here to modify $(KDIR_TMP)/vmlinux-initramfs-$(2)
+	$(CP) $(KDIR_TMP)/vmlinux-initramfs-$(2) $(BIN_DIR)/$(IMG_PREFIX)-$(2)-initramfs.bin
+endef
+
+define Image/Build/MerakiNAND/buildkernel
+	$(eval kernelsize=$(call mtdpartsize,kernel,$(4)))
+	$(call PatchKernel,$(2),$(3) $(4),"")
+	# Add header logic here to modify $(KDIR_TMP)/vmlinux-$(2)
+	$(CP) $(KDIR_TMP)/vmlinux-$(2) $(BIN_DIR)/$(IMG_PREFIX)-$(2)-kernel.bin
+
 endef
 
 define Image/Build/MerakiNAND
-	if [ "$(1)" != "squashfs" ]; then \
-		echo Only squashfs is supported; \
-		return 0; \
-	fi
-	$(eval firmwaresize=$(call mtdpartsize,firmware,$(4)))
-	$(eval kernelsize=$(call mtdpartsize,kernel,$(4)))
-	$(eval imageraw=$(KDIR_TMP)/$(2)-raw.img)
-	$(CP) $(KDIR)/root.$(1) $(KDIR_TMP)/ubi_root.img
-	$(call ubinize,ubinize-$(2).ini,$(KDIR_TMP),$(KDIR_TMP)/$(2)-root.ubi,128KiB,2048,-E 5)
-	( \
-		dd if=$(KDIR_TMP)/$(2)-kernel.jffs2; \
-		dd if=$(KDIR_TMP)/$(2)-root.ubi \
-	) > $(imageraw)
-	dd if=$(imageraw) of=$(BIN_DIR)/$(IMG_PREFIX)-$(2)-$(1)-factory.bin \
-		bs=128k conv=sync
-	$(call Image/Build/SysupgradeNAND,$(2),squashfs,$(KDIR_TMP)/$(2)-kernel.jffs2)
+	$(eval fwsize=$(call mtdpartsize,firmware,$(4)))
+	$(eval rootsize=$(call mtdpartsize,rootfs,$(4)))
+	$(eval kernsize=$(call mtdpartsize,kernel,$(4)))
+	dd if=$(KDIR)/root.$(1) \
+			of=$(call imgname,$(1),$(2)-rootfs).bin bs=128k conv=sync; \
+	$(call Image/Build/SysupgradeNAND,$(2),squashfs,$(KDIR_TMP)/vmlinux-$(2))
 endef
-
 
 Image/Build/Netgear/initramfs=$(call MkuImageLzma/initramfs,$(2),$(3) $(4),,-M $(5))
 
@@ -2249,7 +2248,7 @@ $(eval $(call MultiProfile,Madwifi,EAP7660D WP543))
 endif # ifeq ($(SUBTARGET),generic)
 
 ifeq ($(SUBTARGET),nand)
-$(eval $(call SingleProfile,AthLzma,64k,MR18,mr18,MR18,ttyS0,115200,$$(mr18_mtdlayout),KRuImage))
+$(eval $(call SingleProfile,MerakiNAND,64k,MR18,mr18,MR18,ttyS0,115200,$$(mr18_mtdlayout)))
 
 $(eval $(call SingleProfile,NetgearNAND,64k,WNDR3700V4,wndr3700v4,WNDR3700_V4,ttyS0,115200,$$(wndr4300_mtdlayout),0x33373033,WNDR3700v4,"",-H 29763948+128+128,wndr4300))
 $(eval $(call SingleProfile,NetgearNAND,64k,WNDR4300V1,wndr4300,WNDR4300,ttyS0,115200,$$(wndr4300_mtdlayout),0x33373033,WNDR4300,"",-H 29763948+0+128+128+2x2+3x3,wndr4300))

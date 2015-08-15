@@ -1,0 +1,82 @@
+--- a/arch/mips/include/asm/mach-ath79/ar71xx_regs.h	2015-08-05 12:58:15.580496899 +0200
++++ b/arch/mips/include/asm/mach-ath79/ar71xx_regs.h	2015-08-05 13:52:32.590857293 +0200
+@@ -360,6 +360,7 @@
+ #define QCA955X_PLL_CLK_CTRL_REG		0x08
+ #define QCA955X_PLL_ETH_XMII_CONTROL_REG	0x28
+ #define QCA955X_PLL_ETH_SGMII_CONTROL_REG	0x48
++#define QCA955X_PLL_ETH_SGMII_SERDES_REG	0x4c
+
+ #define QCA955X_PLL_CPU_CONFIG_NFRAC_SHIFT	0
+ #define QCA955X_PLL_CPU_CONFIG_NFRAC_MASK	0x3f
+@@ -392,6 +393,10 @@
+ #define QCA955X_PLL_CLK_CTRL_DDRCLK_FROM_DDRPLL		BIT(21)
+ #define QCA955X_PLL_CLK_CTRL_AHBCLK_FROM_DDRPLL		BIT(24)
+
++#define QCA955X_PLL_ETH_SGMII_SERDES_LOCK_DETECT	BIT(2)
++#define QCA955X_PLL_ETH_SGMII_SERDES_PLL_REFCLK		BIT(1)
++#define QCA955X_PLL_ETH_SGMII_SERDES_EN_PLL		BIT(0)
++
+ #define QCA956X_PLL_CPU_CONFIG_REG			0x00
+ #define QCA956X_PLL_CPU_CONFIG1_REG			0x04
+ #define QCA956X_PLL_DDR_CONFIG_REG			0x08
+@@ -1094,5 +1099,11 @@
+ #define QCA955X_ETH_CFG_RDV_DELAY	BIT(16)
+ #define QCA955X_ETH_CFG_RDV_DELAY_MASK	0x3
+ #define QCA955X_ETH_CFG_RDV_DELAY_SHIFT	16
++
++#define QCA955X_GMAC_REG_SGMII_SERDES			0x0018
++#define QCA955X_SGMII_SERDES_RES_CALIBRATION		BIT(23)
++#define QCA955X_SGMII_SERDES_RES_CALIBRATION_MASK	0xf
++#define QCA955X_SGMII_SERDES_RES_CALIBRATION_SHIFT	23
++#define QCA955X_SGMII_SERDES_LOCK_DETECT_STATUS		BIT(15)
+
+ #endif /* __ASM_MACH_AR71XX_REGS_H */
+--- a/arch/mips/ath79/dev-eth.c	2015-08-05 14:17:25.757504251 +0200
++++ b/arch/mips/ath79/dev-eth.c	2015-08-05 14:09:54.716333554 +0200
+@@ -849,6 +849,37 @@ void __init ath79_setup_qca955x_eth_rx_d
+ 	iounmap(base);
+ }
+
++void __init ath79_setup_qca955x_eth_serdes_cal(unsigned int sgmii_value)
++{
++	void __iomem *ethbase, *pllbase;
++	u32 t;
++
++	ethbase = ioremap_nocache(QCA955X_GMAC_BASE, QCA955X_GMAC_SIZE);
++	pllbase = ioremap_nocache(AR71XX_PLL_BASE, AR71XX_PLL_SIZE);
++
++	/* To Check the locking of the SGMII PLL */
++	t = __raw_readl(ethbase + QCA955X_GMAC_REG_SGMII_SERDES);
++	t &= ~(QCA955X_SGMII_SERDES_RES_CALIBRATION_MASK <<
++	       QCA955X_SGMII_SERDES_RES_CALIBRATION_SHIFT);
++	t |= (sgmii_value & QCA955X_SGMII_SERDES_RES_CALIBRATION_MASK) <<
++	     QCA955X_SGMII_SERDES_RES_CALIBRATION_SHIFT;
++	__raw_writel(t, ethbase + QCA955X_GMAC_REG_SGMII_SERDES);
++
++	__raw_writel(QCA955X_PLL_ETH_SGMII_SERDES_LOCK_DETECT |
++		     QCA955X_PLL_ETH_SGMII_SERDES_PLL_REFCLK |
++		     QCA955X_PLL_ETH_SGMII_SERDES_EN_PLL,
++		     pllbase + QCA955X_PLL_ETH_SGMII_SERDES_REG);
++
++	ath79_device_reset_clear(QCA955X_RESET_SGMII_ANALOG);
++	ath79_device_reset_clear(QCA955X_RESET_SGMII);
++
++	while (!(__raw_readl(ethbase + QCA955X_GMAC_REG_SGMII_SERDES) &
++		QCA955X_SGMII_SERDES_LOCK_DETECT_STATUS));
++
++	iounmap(ethbase);
++	iounmap(pllbase);
++}
++
+ static int ath79_eth_instance __initdata;
+ void __init ath79_register_eth(unsigned int id)
+ {
+--- a/arch/mips/ath79/dev-eth.h	2015-08-05 14:17:25.757504251 +0200
++++ b/arch/mips/ath79/dev-eth.h	2015-08-05 13:58:20.292866210 +0200
+@@ -50,5 +50,6 @@ void ath79_setup_ar934x_eth_cfg(u32 mask
+ void ath79_setup_ar934x_eth_rx_delay(unsigned int rxd, unsigned int rxdv);
+ void ath79_setup_qca955x_eth_cfg(u32 mask);
+ void ath79_setup_qca955x_eth_rx_delay(unsigned int rxd, unsigned int rxdv);
++void ath79_setup_qca955x_eth_serdes_cal(unsigned int sgmii_value);
+
+ #endif /* _ATH79_DEV_ETH_H */
