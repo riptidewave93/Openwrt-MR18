@@ -39,6 +39,19 @@
 
 #define MR18_WAN_PHYADDR    3
 
+/* used for eth calibration */
+#define MR18_OTP_BASE			(AR71XX_APB_BASE + 0x130000)
+#define MR18_OTP_SIZE			(0x2000) /* just a guess */
+#define MR18_OTP_MEM_0_REG		(0x0000)
+#define MR18_OTP_INTF2_REG		(0x1008)
+#define MR18_OTP_STATUS0_REG		(0x1018)
+#define MR18_OTP_STATUS0_EFUSE_VALID	BIT(2)
+
+#define MR18_OTP_STATUS1_REG		(0x101c)
+#define MR18_OTP_LDO_CTRL_REG		(0x1024)
+#define MR18_OTP_LDO_STATUS_REG		(0x102c)
+#define MR18_OTP_LDO_STATUS_POWER_ON	BIT(0)
+
 static struct gpio_led MR18_leds_gpio[] __initdata = {
 	{
 		.name = "mr18:white:power",
@@ -90,19 +103,6 @@ static struct platform_device tricolor_leds = {
 	.dev.platform_data = &tricolor_led_data,
 };
 
-#define MR18_OTP_BASE			(AR71XX_APB_BASE + 0x130000)
-#define MR18_OTP_SIZE			(0x2000) /* just a guess */
-#define MR18_OTP_MEM_0_REG		(0x0000)
-#define MR18_OTP_INTF2_REG		(0x1008)
-#define MR18_OTP_STATUS0_REG		(0x1018)
-#define MR18_OTP_STATUS0_EFUSE_VALID	BIT(2)
-
-#define MR18_OTP_STATUS1_REG		(0x101c)
-#define MR18_OTP_LDO_CTRL_REG		(0x1024)
-#define MR18_OTP_LDO_STATUS_REG		(0x102c)
-#define MR18_OTP_LDO_STATUS_POWER_ON	BIT(0)
-
-/* ToDo: Move to own file/eth function */
 static int mr18_extract_sgmii_res_cal(void)
 {
 	void __iomem *base;
