@@ -59,11 +59,6 @@ if [ $firstbuild = "1" ]; then
   cd - > /dev/null
 fi
 
-Msg "Applying configurations..."
-cp ./configs/openwrt-config $clonedir/.config
-cp ./configs/kernel-config $clonedir/target/linux/ar71xx/config-4.1
-cp ./configs/kernel-config $clonedir/target/linux/ar71xx/nand/config-default
-
 if [ $modify -eq 1 ]; then
   cd $clonedir
   Msg "Loading OpenWRT Menuconfig"
@@ -71,14 +66,6 @@ if [ $modify -eq 1 ]; then
   Msg "Loading Kernel Menuconfig"
   make kernel_menuconfig
   cd - > /dev/null
-  Msg "Copy kernel config to nand-default? (You normally want this....)"
-  Msg "Y/n?"
-  read input
-  if [[ $input !=  *"n"* ]]; then
-    Msg "Copying Config..."
-    cp $clonedir/build_dir/target-mips_34kc_musl-1.1.10/linux-ar71xx_nand/linux-4.1.3/.config $clonedir/target/linux/ar71xx/config-4.1
-    cp $clonedir/target/linux/ar71xx/config-4.1 $clonedir/target/linux/ar71xx/nand/config-default
-  fi
 fi
 
 Msg "Building Time!!!"
@@ -92,26 +79,6 @@ if [ $? -ne 0 ]; then
 else
   cd - > /dev/null
   Msg "Compile Complete!"
-fi
-
-if [ $modify -eq 1 ]; then
-  Msg "Would you like to save your new configurations to the configs folder?"
-  Msg "Y/n?"
-  read input
-  if [[ $input !=  *"n"* ]]; then
-    Msg "Saving configs..."
-    cp $clonedir/.config ./configs/openwrt-config
-    cp $clonedir/target/linux/ar71xx/config-4.1 ./configs/kernel-config
-  fi
-fi
-
-if [ -e $clonedir/bin/ar71xx/openwrt-ar71xx-nand-vmlinux-initramfs.bin ]; then
-  Msg "Generating Nandloader Bootable Images"
-  # Change to device image once we get the platform in makefile setup
-  $partbuilderdir/partbuilder.sh $clonedir/bin/ar71xx/openwrt-ar71xx-nand-vmlinux-initramfs.bin ./openwrt-ar71xx-nand-vmlinux-initramfs-nandloader-part1.bin
-  $partbuilderdir/partbuilder.sh $clonedir/bin/ar71xx/openwrt-ar71xx-nand-vmlinux.bin ./openwrt-ar71xx-nand-vmlinux-nandloader-part1.bin
-  Msg "Moving Images to Local Dir..."
-  cp $clonedir/bin/ar71xx/openwrt-ar71xx-nand-vmlinux-initramfs.elf ./
 fi
 
 Msg "Build.sh Finished!"

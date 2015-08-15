@@ -18,11 +18,9 @@ To Do
 -----
 ##### MR18
   1. Cleanup NIC Init (Make a proper patch)
-  * Create Device Images
-    1. Port kernel builder to C from bash
-    * Finish device image/sysupgrade generation Makefile code
-    * Enable/Setup Sysupgrade
-      1. Custom update script to handle kernel_backup
+  * Port kernel builder to C from bash
+  * Fixup sysupgrade/initramfs device file generation
+  * Enable/Setup Sysupgrade w/ custom upgrade script
   * Fix MAC on WLAN2
   * Possibly cleanup Caldata generation code
 

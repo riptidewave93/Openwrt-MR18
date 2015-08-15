@@ -392,3 +392,5 @@ module_exit(led_nu801_exit);
 
 MODULE_AUTHOR("Kevin Paul Herbert <kph@meraki.net>");
 MODULE_DESCRIPTION("NU801 LED driver");
+MODULE_LICENSE("GPL v2");
+MODULE_ALIAS("platform:leds-nu801");

@@ -11,7 +11,7 @@ define KernelPackage/leds-nu801
   DEPENDS:=@TARGET_ar71xx
   KCONFIG:=CONFIG_LEDS_NU801
   FILES:=$(LINUX_DIR)/drivers/leds/leds-nu801.ko
-  AUTOLOAD:=$(call AutoLoad,60,leds-nu801)
+  AUTOLOAD:=$(call AutoLoad,1,leds-nu801)
 endef
 
 define KernelPackage/leds-nu801/description
