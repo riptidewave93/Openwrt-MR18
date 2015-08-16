@@ -79,7 +79,6 @@
 # CONFIG_ATH79_NVRAM is not set
 CONFIG_CMDLINE="rootfstype=squashfs noinitrd"
 # CONFIG_IP17XX_PHY is not set
-CONFIG_LEDS_NU801=m
 # CONFIG_MARVELL_PHY is not set
 # CONFIG_MICREL_PHY is not set
 # CONFIG_MTD_CFI is not set

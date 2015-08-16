@@ -4,12 +4,13 @@
 # This is free software, licensed under the GNU General Public License v2.
 # See /LICENSE for more information.
 #
+
+JFFS2_BLOCKSIZE = 64k 128k 256k
+
 include $(TOPDIR)/rules.mk
 include $(INCLUDE_DIR)/image.mk
 
 IMAGE_PROFILE:=$(if $(PROFILE),$(PROFILE),Default)
-
-JFFS2_BLOCKSIZE = 64k 128k 256k
 
 KERNEL_LOADADDR = 0x80060000
 
@@ -465,7 +466,7 @@ endef
 define Device/tl-mr3220-v2
     $(Device/tplink-4mlzma)
     BOARDNAME := TL-MR3220-v2
-    DEVICE_PROFILE := TLMR3220V2
+    DEVICE_PROFILE := TLMR3220
     TPLINK_HWID := 0x32200002
     CONSOLE := ttyATH0,115200
 endef
@@ -960,7 +961,6 @@ endef
 
 LOADER_MAKE := $(NO_TRACE_MAKE) -C lzma-loader KDIR=$(KDIR)
 
-KDIR_TMP:=$(KDIR)/tmp
 VMLINUX:=$(BIN_DIR)/$(IMG_PREFIX)-vmlinux
 UIMAGE:=$(BIN_DIR)/$(IMG_PREFIX)-uImage
 
@@ -1135,7 +1135,7 @@ endef
 # $(4), unused here
 # $(5), suffix of kernel filename, e.g. -initramfs, or empty
 define Image/BuildLoaderPatched
-	$(call PatchKernelLzma,$(1),$(3),,$(5))
+	$(call PatchKernelLzma,$(1),$(3))
 	-rm -rf $(KDIR)/lzma-loader
 	$(LOADER_MAKE) LOADER=loader-$(1).$(2) \
 		LZMA_TEXT_START=0x80a00000 LOADADDR=0x80060000 \
@@ -1784,6 +1784,7 @@ Image/Build/CyberTANGZIP=$(call Image/Build/CyberTAN,$(1),$(2),$(3),$(4),$(5))
 Image/Build/CyberTANLZMA/buildkernel=$(call MkuImageLzma,$(2),$(3) $(4))
 Image/Build/CyberTANLZMA=$(call Image/Build/CyberTAN,$(1),$(2),$(3),$(4),$(5))
 
+
 define Image/Build/MerakiNAND/initramfs
 	$(eval kernelsize=$(call mtdpartsize,kernel,$(4)))
 	$(call PatchKernel,$(2),$(3) $(4),"-initramfs")
@@ -1807,6 +1808,7 @@ define Image/Build/MerakiNAND
 			of=$(call imgname,$(1),$(2)-rootfs).bin bs=128k conv=sync; \
 	$(call Image/Build/SysupgradeNAND,$(2),squashfs,$(KDIR_TMP)/vmlinux-$(2))
 endef
+
 
 Image/Build/Netgear/initramfs=$(call MkuImageLzma/initramfs,$(2),$(3) $(4),,-M $(5))
 

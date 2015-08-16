@@ -39,6 +39,19 @@
 
 #define MR18_WAN_PHYADDR    3
 
+/* used for eth calibration */
+#define MR18_OTP_BASE			(AR71XX_APB_BASE + 0x130000)
+#define MR18_OTP_SIZE			(0x2000) /* just a guess */
+#define MR18_OTP_MEM_0_REG		(0x0000)
+#define MR18_OTP_INTF2_REG		(0x1008)
+#define MR18_OTP_STATUS0_REG		(0x1018)
+#define MR18_OTP_STATUS0_EFUSE_VALID	BIT(2)
+
+#define MR18_OTP_STATUS1_REG		(0x101c)
+#define MR18_OTP_LDO_CTRL_REG		(0x1024)
+#define MR18_OTP_LDO_STATUS_REG		(0x102c)
+#define MR18_OTP_LDO_STATUS_POWER_ON	BIT(0)
+
 static struct gpio_led MR18_leds_gpio[] __initdata = {
 	{
 		.name = "mr18:white:power",
@@ -90,60 +103,42 @@ static struct platform_device tricolor_leds = {
 	.dev.platform_data = &tricolor_led_data,
 };
 
-#define OTP_INTF2_ADDRESS				0x18131008
-#define OTP_LDO_CONTROL_ADDRESS				0x18131024
-#define OTP_LDO_STATUS_ADDRESS				0x1813102c
-
-#define OTP_LDO_STATUS_POWER_ON				BIT(0)
-
-#define OTP_MEM_0_ADDRESS				0x18130000
-#define OTP_STATUS0_EFUSE_READ_DATA_VALID		BIT(2)
-
-#define OTP_STATUS0_ADDRESS				0x18131018
-#define OTP_STATUS1_ADDRESS				0x1813101c
-
-#define ath_reg_rd(_phys)       (*(volatile uint32_t *)KSEG1ADDR(_phys))
-
-#define ath_reg_wr_nf(_phys, _val) \
-	((*(volatile uint32_t *)KSEG1ADDR(_phys)) = (_val))
-
-#define ath_reg_wr(_phys, _val) do {    \
-	ath_reg_wr_nf(_phys, _val);     \
-	ath_reg_rd(_phys);              \
-} while(0)
-
-/* ToDo: Move to own file/eth function */
-static unsigned int mr18_extract_sgmii_res_cal(void)
+static int mr18_extract_sgmii_res_cal(void)
 {
+	void __iomem *base;
 	unsigned int reversed_sgmii_value;
 
-	unsigned int read_data_otp, otp_value, otp_per_val, rbias_per, read_data;
-	unsigned int rbias_pos_or_neg, res_cal_val;
-	unsigned int sgmii_pos, sgmii_res_cal_value;
+	unsigned int otp_value, otp_per_val, rbias_per, read_data;
+	unsigned int rbias_pos_or_neg;
+	unsigned int sgmii_res_cal_value;
+	int res_cal_val;
 
-	ath_reg_wr(OTP_INTF2_ADDRESS, 0x7d);
-	ath_reg_wr(OTP_LDO_CONTROL_ADDRESS, 0x0);
+	base = ioremap_nocache(MR18_OTP_BASE, MR18_OTP_SIZE);
+	if (!base)
+		return -EIO;
 
-	while (ath_reg_rd(OTP_LDO_STATUS_ADDRESS) & OTP_LDO_STATUS_POWER_ON);
-	read_data = ath_reg_rd(OTP_MEM_0_ADDRESS + 4);
-	while (!(ath_reg_rd(OTP_STATUS0_ADDRESS) & OTP_STATUS0_EFUSE_READ_DATA_VALID));
+	__raw_writel(0x7d, base + MR18_OTP_INTF2_REG);
+	__raw_writel(0x00, base + MR18_OTP_LDO_CTRL_REG);
 
-	read_data = read_data_otp = ath_reg_rd(OTP_STATUS1_ADDRESS);
+	while (__raw_readl(base + MR18_OTP_LDO_STATUS_REG) &
+		MR18_OTP_LDO_STATUS_POWER_ON);
 
-	if (!(read_data & 0x1fff)) {
-		unsigned int *address_spi = (unsigned int *)0xbffffffc;
-		unsigned int read_data_spi;
+	__raw_readl(base + MR18_OTP_MEM_0_REG + 4);
 
-		read_data_spi = *(address_spi);
-		if ((read_data_spi & 0xffff0000) == 0x5ca10000)
-			read_data = read_data_spi;
-	}
+	while (!(__raw_readl(base + MR18_OTP_STATUS0_REG) &
+		MR18_OTP_STATUS0_EFUSE_VALID));
 
-	if (read_data & 0x00001000) {
+	read_data = __raw_readl(base + MR18_OTP_STATUS1_REG);
+
+	iounmap(base);
+
+	if (!(read_data & 0x1fff))
+		return -ENODEV;
+
+	if (read_data & 0x00001000)
 		otp_value = (read_data & 0xfc0) >> 6;
-	} else {
+	else
 		otp_value = read_data & 0x3f;
-	}
 
 	if (otp_value > 31) {
 		otp_per_val = 63 - otp_value;
@@ -155,46 +150,30 @@ static unsigned int mr18_extract_sgmii_res_cal(void)
 
 	rbias_per = otp_per_val * 15;
 
-	if (rbias_pos_or_neg == 1) {
+	if (rbias_pos_or_neg == 1)
 		res_cal_val = (rbias_per + 34) / 21;
-		sgmii_pos = 1;
-	} else {
-		if (rbias_per > 34) {
-			res_cal_val = (rbias_per - 34) / 21;
-			sgmii_pos = 0;
-		} else {
-			res_cal_val = (34 - rbias_per) / 21;
-			sgmii_pos = 1;
-		}
-	}
-
-	if (sgmii_pos == 1)
-		sgmii_res_cal_value = 8 + res_cal_val;
+	else if (rbias_per > 34)
+		res_cal_val = -((rbias_per - 34) / 21);
 	else
-		sgmii_res_cal_value = 8 - res_cal_val;
+		res_cal_val = (34 - rbias_per) / 21;
 
-	reversed_sgmii_value = 0;
-	reversed_sgmii_value |= (sgmii_res_cal_value & 8) >> 3;
+	sgmii_res_cal_value = (8 + res_cal_val) & 0xf;
+
+	reversed_sgmii_value  = (sgmii_res_cal_value & 8) >> 3;
 	reversed_sgmii_value |= (sgmii_res_cal_value & 4) >> 1;
 	reversed_sgmii_value |= (sgmii_res_cal_value & 2) << 1;
 	reversed_sgmii_value |= (sgmii_res_cal_value & 1) << 3;
-	reversed_sgmii_value &= 0xf;
 	printk(KERN_INFO "SGMII cal value = 0x%x\n", reversed_sgmii_value);
 	return reversed_sgmii_value;
 }
 
 static void __init mr18_setup(void)
 {
+	int res;
+
 	/* NAND */
 	ath79_nfc_set_ecc_mode(AR934X_NFC_ECC_SOFT_BCH);
 	ath79_register_nfc();
-
-	/* Setup SoC Eth Config */
-	ath79_setup_qca955x_eth_cfg(QCA955X_ETH_CFG_RGMII_EN);
-	ath79_setup_qca955x_eth_rx_delay(3,3);
-
-	/* MDIO Interface */
-	ath79_register_mdio(0, 0x0);
 
 	/* even though, the PHY is connected via RGMII,
 	 * the SGMII/SERDES PLLs need to be calibrated and locked.
@@ -203,17 +182,29 @@ static void __init mr18_setup(void)
 	 * Figuring this out took such a long time, that we want to
 	 * point this quirk out, before someone wants to remove it.
 	 */
-	ath79_setup_qca955x_eth_serdes_cal(mr18_extract_sgmii_res_cal());
+	res = mr18_extract_sgmii_res_cal();
+	if (res >= 0) {
+		/* Setup SoC Eth Config */
+		ath79_setup_qca955x_eth_cfg(QCA955X_ETH_CFG_RGMII_EN);
+		ath79_setup_qca955x_eth_rx_delay(3,3);
 
-	/* GMAC0 is connected to an Atheros AR8035-A */
-	ath79_init_mac(ath79_eth0_data.mac_addr, NULL, 0);
-	ath79_eth0_data.mii_bus_dev = &ath79_mdio0_device.dev;
-	ath79_eth0_data.phy_if_mode = PHY_INTERFACE_MODE_RGMII;
-	ath79_eth0_data.phy_mask = BIT(MR18_WAN_PHYADDR);
-	ath79_eth0_pll_data.pll_1000 = 0xa6000000;
-	ath79_eth0_pll_data.pll_100 = 0xa0000101;
-	ath79_eth0_pll_data.pll_10 = 0x80001313;
-	ath79_register_eth(0);
+		/* MDIO Interface */
+		ath79_register_mdio(0, 0x0);
+
+		ath79_setup_qca955x_eth_serdes_cal(res);
+
+		/* GMAC0 is connected to an Atheros AR8035-A */
+		ath79_init_mac(ath79_eth0_data.mac_addr, NULL, 0);
+		ath79_eth0_data.mii_bus_dev = &ath79_mdio0_device.dev;
+		ath79_eth0_data.phy_if_mode = PHY_INTERFACE_MODE_RGMII;
+		ath79_eth0_data.phy_mask = BIT(MR18_WAN_PHYADDR);
+		ath79_eth0_pll_data.pll_1000 = 0xa6000000;
+		ath79_eth0_pll_data.pll_100 = 0xa0000101;
+		ath79_eth0_pll_data.pll_10 = 0x80001313;
+		ath79_register_eth(0);
+	} else {
+		printk(KERN_ERR "failed to read EFUSE for ethernet cal\n");
+	}
 
 	/* LEDs and Buttons */
 	platform_device_register(&tricolor_leds);

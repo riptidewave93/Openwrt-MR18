@@ -2,7 +2,7 @@
 
 Bringup repo for the Cisco Meraki MR18 on OpenWRT!
 
-Code is based on revision http://git.openwrt.org/?p=openwrt.git;a=commit;h=21067c3680641ba52f00d11206f1eff7157ccd53
+Code is based on revision http://git.openwrt.org/?p=openwrt.git;a=commit;h=c2a0c9d4a685d7b498e59a11d06a01fe25835351
 
 Building
 -----
@@ -17,12 +17,11 @@ Images by default will be moved to the root dir of the repo.
 To Do
 -----
 ##### MR18
-  1. Cleanup NIC Init (Make a proper patch)
   * Port kernel builder to C from bash
   * Fixup sysupgrade/initramfs device file generation
   * Enable/Setup Sysupgrade w/ custom upgrade script
   * Fix MAC on WLAN2
-  * Possibly cleanup Caldata generation code
+  * Possibly cleanup Caldata generation code (can be done within sysupgrade code, like other boards)
 
 Working
 -----
@@ -32,8 +31,8 @@ Working
   * NAND Read/Write
   * Basic Sysfs Integration
   * Nandloader bootable images
-  * Ethernet (dirty patch atm)
-  * Caldata Generation using nanddump (needed for sysupgrade)
+  * Ethernet
+  * Caldata Generation using nanddump
 
 Notice
 ------
