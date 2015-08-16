@@ -98,7 +98,7 @@ static int ap91_dual_pci_plat_dev_init(struct pci_dev *dev)
 	case 0:
 		dev->dev.platform_data = &ap9x_wmac0_data;
 		break;
-  case 1:
+	case 1:
 		dev->dev.platform_data = &ap9x_wmac1_data;
 		break;
 	}
@@ -124,9 +124,9 @@ __init void ap91_pci_init(u8 *cal_data, u8 *mac_addr)
 }
 
 __init void ap91_dual_pci_init(u8 *cal_data0, u8 *mac_addr0,
-			  u8 *cal_data1, u8 *mac_addr1)
+			       u8 *cal_data1, u8 *mac_addr1)
 {
-  if (cal_data0)
+	if (cal_data0)
 		memcpy(ap9x_wmac0_data.eeprom_data, cal_data0,
 		       sizeof(ap9x_wmac0_data.eeprom_data));
 
@@ -161,7 +161,7 @@ __init void ap91_dual_pci_init_simple(void)
 {
 	ap91_dual_pci_init(NULL, NULL, NULL, NULL);
 	ap9x_wmac0_data.eeprom_name = "pci_wmac0.eeprom";
-  ap9x_wmac0_data.eeprom_name = "pci_wmac1.eeprom";
+	ap9x_wmac1_data.eeprom_name = "pci_wmac1.eeprom";
 }
 
 static int ap94_pci_plat_dev_init(struct pci_dev *dev)
