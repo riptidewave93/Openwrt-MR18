@@ -31,12 +31,12 @@ meraki_caldata_check() {
 	case $1 in
 	mr18)
 		mr18_is_valid_cal() {
-			dd if=/dev/mtdblock$1 bs=1 skip=$2 count=1 2>/dev/null | hexdump -C | grep '\<02\>' > /dev/null
+			dd bs=1 count=1 skip=$2 if=/dev/mtdblock$1 2>/dev/null | hexdump -v -n 4 -e '1/1 "%02x"'
 		}
 		mr18_create_caldata() {
 			# $1 = MTD#
 			# $2 = UBI Size in KB, ex 128
-			nanddump -o --bb=skipbad -f /tmp/odm-caldata.raw /dev/mtd$1 > /dev/null 2>&1
+			dd if="/dev/mtd$1" 2>/dev/null > /tmp/odm-caldata.raw
 			ubimkvol /dev/ubi0 -N caldata -s $2KiB
 			sleep 1  # need small delay before ubiupdatevol sees the new vol
 			calubivol=$(ubinfo /dev/ubi0 -N caldata | grep Volume | awk '{print $3}')
