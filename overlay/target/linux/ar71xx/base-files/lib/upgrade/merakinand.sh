@@ -18,42 +18,30 @@ get_magic_at() {
 merakinand_do_kernel_check() {
 	local board_name="$1"
 	local tar_file="$2"
-	local image_magic_word=`(tar xf $tar_file sysupgrade-$board_name/kernel -O | dd bs=1 count=4 skip=0 >/dev/null | hexdump -v -n 4 -e '1/1 "%02x"')`
+	local image_magic_word=`(tar xf $tar_file sysupgrade-$board_name/kernel -O 2>/dev/null | dd bs=1 count=4 skip=0 2>/dev/null | hexdump -v -n 4 -e '1/1 "%02x"')`
 
-	# What is our magic string we need to look for?
+	# What is our kernel magic string?
 	case "$board_name" in
 	"mr18")
-		[ "$image_magic_word" != "8e73ed8a" ] && {
-			return 1
+		[ "$image_magic_word" == "8e73ed8a" ] && {
+			echo "pass" && return 0
 		}
-		;;
-	*)
-		return 1
 		;;
 	esac
 
-	return 0
+	exit 1
 }
 
 merakinand_do_platform_check() {
 	local board_name="$1"
 	local tar_file="$2"
 	local control_length=`(tar xf $tar_file sysupgrade-$board_name/CONTROL -O | wc -c) 2> /dev/null`
-	local file_type="$(identify $2)"
+	local file_type="$(identify_tar $2 sysupgrade-$board_name/root)"
 	local kernel_magic="$(merakinand_do_kernel_check $1 $2)"
 
-	# Got to start somewhere...
-	echo "DEBUG: board_name = $board_name";
-	echo "DEBUG: tar_file = $tar_file";
-	echo "DEBUG: control_length = $control_length";
-	echo "DEBUG: file_type = $file_type";
-	echo "DEBUG: kernel_magic = $kernel_magic"
-
-	# What device are we?
 	case "$board_name" in
 	"mr18")
-		# We need a TAR that is using a SquashFS root
-		[ "$control_length" = 0 -a "$file_type" != "squashfs" -a "$kernel_magic" != 0 ] && {
+		[ "$control_length" = 0 -o "$file_type" != "squashfs" -o "$kernel_magic" != "pass" ] && {
 			echo "Invalid sysupgrade file for $board_name"
 			return 1
 		}
@@ -63,9 +51,6 @@ merakinand_do_platform_check() {
 		return 1
 		;;
 	esac
-
-	echo -n $2 > /tmp/sysupgrade-nand-path
-	cp /sbin/upgraded /tmp/
 
 	return 0
 }
