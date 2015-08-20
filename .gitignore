@@ -1,6 +1,3 @@
 meraki-partbuilder/
 openwrt/
 *.DS_Store
-openwrt-ar71xx-nand-vmlinux-initramfs-nandloader-part1.bin
-openwrt-ar71xx-nand-vmlinux-nandloader-part1.bin
-openwrt-ar71xx-nand-vmlinux-initramfs.elf

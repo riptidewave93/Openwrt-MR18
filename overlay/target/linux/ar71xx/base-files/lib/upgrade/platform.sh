@@ -475,8 +475,7 @@ platform_pre_upgrade() {
 		nand_do_upgrade "$1"
 		;;
 	mr18 )
-		echo "Sysupgrade is not yet supported on $board."
-		return 1
+		merakinand_do_upgrade "$1"
 		;;
 	esac
 }
