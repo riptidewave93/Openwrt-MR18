@@ -219,6 +219,6 @@ static void __init mr18_setup(void)
 
 	/* WiFi */
 	ath79_register_wmac_simple();
-	ap91_pci_init_simple();
+	ap91_dual_pci_init_simple();
 }
 MIPS_MACHINE(ATH79_MACH_MR18, "MR18", "Meraki MR18", mr18_setup);

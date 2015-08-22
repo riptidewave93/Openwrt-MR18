@@ -27,43 +27,6 @@ ath9k_patch_firmware_mac() {
 	macaddr_2bin $mac | dd of=/lib/firmware/$FIRMWARE conv=notrunc bs=1 seek=2 count=6
 }
 
-meraki_caldata_check() {
-	case $1 in
-	mr18)
-		mr18_is_valid_cal() {
-			dd if=/dev/mtdblock$1 bs=1 skip=$2 count=1 2>/dev/null | hexdump -C | grep '\<02\>' > /dev/null
-		}
-		mr18_create_caldata() {
-			# $1 = MTD#
-			# $2 = UBI Size in KB, ex 128
-			nanddump -o --bb=skipbad -f /tmp/odm-caldata.raw /dev/mtd$1 > /dev/null 2>&1
-			ubimkvol /dev/ubi0 -N caldata -s $2KiB
-			sleep 1  # need small delay before ubiupdatevol sees the new vol
-			calubivol=$(ubinfo /dev/ubi0 -N caldata | grep Volume | awk '{print $3}')
-			ubiupdatevol /dev/ubi0_$calubivol /tmp/odm-caldata.raw
-			rm /tmp/odm-caldata.raw
-		}
-		calmtd=$(cat /proc/mtd | grep -e "\"caldata\"" | awk '{print $1}' | sed 's/:$//' | cut -c 4-) # UBI caldata MTD
-		odmcalmtd=$(cat /proc/mtd | grep -e "\"odm-caldata\"" | awk '{print $1}' | sed 's/:$//' | cut -c 4-) # NAND odm-caldata MTD
-		if [ -n "$calmtd" ]; then
-			if ! mr18_is_valid_cal $calmtd 4096 || ! mr18_is_valid_cal $calmtd 20480 || ! mr18_is_valid_cal $calmtd 36864 ; then
-				echo "$board UBI caldata is invalid. Recreating partition!"
-				ubirmvol /dev/ubi0 -N caldata
-				sleep 1
-				mr18_create_caldata $odmcalmtd 128
-			fi
-		else
-			echo "$board UBI caldata is missing. Creating partition!"
-			mr18_create_caldata $odmcalmtd 128
-		fi
-		;;
-	*)
-		ath9k_eeprom_die "board $board is not supported by meraki_caldata_check()"
-		;;
-	esac
-	sleep 1 # Give us a sec
-}
-
 [ -e /lib/firmware/$FIRMWARE ] && exit 0
 
 . /lib/ar71xx.sh
@@ -76,8 +39,7 @@ case "$FIRMWARE" in
 "soc_wmac.eeprom")
 	case $board in
 	mr18)
-		meraki_caldata_check $board # Only need once
-		ath9k_eeprom_extract "caldata" 4096 2048
+		ath9k_eeprom_extract "odm-caldata" 4096 2048
 		ath9k_patch_firmware_mac $(macaddr_add $(mtd_get_mac_binary board-config 102) +1)
 		;;
 	r6100 | \
@@ -95,7 +57,7 @@ case "$FIRMWARE" in
 "pci_wmac0.eeprom")
 	case $board in
 	mr18)
-		ath9k_eeprom_extract "caldata" 20480 2048
+		ath9k_eeprom_extract "odm-caldata" 20480 2048
 		ath9k_patch_firmware_mac $(macaddr_add $(mtd_get_mac_binary board-config 102) +2)
 		;;
 	wndr3700v4 | \
@@ -112,7 +74,7 @@ case "$FIRMWARE" in
 "pci_wmac1.eeprom")
 	case $board in
 	mr18)
-		ath9k_eeprom_extract "caldata" 36864 2048
+		ath9k_eeprom_extract "odm-caldata" 36864 2048
 		ath9k_patch_firmware_mac $(macaddr_add $(mtd_get_mac_binary board-config 102) +3)
 		;;
 	*)
