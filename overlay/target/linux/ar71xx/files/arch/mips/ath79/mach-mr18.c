@@ -167,6 +167,22 @@ static int mr18_extract_sgmii_res_cal(void)
 	return reversed_sgmii_value;
 }
 
+static int mr18_dual_pci_plat_dev_init(struct pci_dev *dev)
+{
+	printk(KERN_INFO "Request for device %x at bus:%x, slot:%x\n",
+	       dev->devfn, PCI_BUS_NUM(dev->devfn), PCI_SLOT(dev->devfn));
+	switch (PCI_BUS_NUM(dev->devfn)) {
+	case 0:
+		dev->dev.platform_data = &ap9x_wmac0_data;
+		break;
+	case 1:
+		dev->dev.platform_data = &ap9x_wmac1_data;
+		break;
+	}
+
+	return 0;
+}
+
 static void __init mr18_setup(void)
 {
 	int res;
@@ -219,6 +235,10 @@ static void __init mr18_setup(void)
 
 	/* WiFi */
 	ath79_register_wmac_simple();
-	ap91_dual_pci_init_simple();
+
+	ap9x_wmac0_data.eeprom_name = "pci_wmac0.eeprom";
+	ap9x_wmac1_data.eeprom_name = "pci_wmac1.eeprom";
+	ath79_pci_set_plat_dev_init(mr18_dual_pci_plat_dev_init);
+	ath79_register_pci();
 }
 MIPS_MACHINE(ATH79_MACH_MR18, "MR18", "Meraki MR18", mr18_setup);
