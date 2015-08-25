@@ -17,11 +17,8 @@ Images by default will be moved to the root dir of the repo.
 To Do
 -----
 ##### MR18
-  * Port kernel builder to C from bash
-  * Fixup sysupgrade/initramfs device file generation
-  * Enable/Setup Sysupgrade w/ custom upgrade script
+  * Fix Sysupgrade bug with config restore
   * Fix MAC on WLAN2
-  * Possibly cleanup Caldata generation code (can be done within sysupgrade code, like other boards)
 
 Working
 -----
@@ -32,7 +29,8 @@ Working
   * Basic Sysfs Integration
   * Nandloader bootable images
   * Ethernet
-  * Caldata Generation using nanddump
+  * Sysconfig w/ kernel_backup support
+  * Automatic Wifi Caldata partition selection (Let's prevent ecc errors if possible!)
 
 Notice
 ------
