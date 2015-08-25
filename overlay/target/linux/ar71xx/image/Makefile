@@ -1789,7 +1789,7 @@ define Image/Build/MerakiNAND/initramfs
 	$(eval kernelsize=$(call mtdpartsize,kernel,$(4)))
 	$(call PatchKernel,$(2),$(3) $(4),"-initramfs")
 	-$(STAGING_DIR_HOST)/bin/mkmerakifw \
-		-B $(2) \
+		-B $(2) -s \
 		-i $(KDIR_TMP)/vmlinux-initramfs-$(2) \
 		-o $(KDIR_TMP)/vmlinux-initramfs-$(2)-patched
 	$(CP) $(KDIR_TMP)/vmlinux-initramfs-$(2)-patched $(BIN_DIR)/$(IMG_PREFIX)-$(2)-initramfs.bin
@@ -1799,7 +1799,7 @@ define Image/Build/MerakiNAND/buildkernel
 	$(eval kernelsize=$(call mtdpartsize,kernel,$(4)))
 	$(call PatchKernel,$(2),$(3) $(4),"")
 	-$(STAGING_DIR_HOST)/bin/mkmerakifw \
-		-B $(2) \
+		-B $(2) -s \
 		-i $(KDIR_TMP)/vmlinux-$(2) \
 		-o $(KDIR_TMP)/vmlinux-$(2)-patched
 	$(CP) $(KDIR_TMP)/vmlinux-$(2)-patched $(BIN_DIR)/$(IMG_PREFIX)-$(2)-kernel.bin
