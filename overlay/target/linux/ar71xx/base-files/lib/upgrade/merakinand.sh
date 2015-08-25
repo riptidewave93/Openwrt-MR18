@@ -58,59 +58,22 @@ merakinand_do_platform_check() {
 merakinand_do_upgrade() {
 	local tar_file="$1"
 	local board_name="$(cat /tmp/sysinfo/board_name)"
-	local kernel_mtd="$(find_mtd_index $CI_KERNPART)"
 	local kernel_backup_mtd="$(find_mtd_index kernel_backup)"
-	local kernel_length=`(tar xf $tar_file sysupgrade-$board_name/kernel -O | wc -c) 2> /dev/null`
-	local rootfs_length=`(tar xf $tar_file sysupgrade-$board_name/root -O | wc -c) 2> /dev/null`
-	local root_ubivol="$( nand_find_volume $ubidev rootfs )"
-	local data_ubivol="$( nand_find_volume $ubidev rootfs_data )"
 
-	local ubidev="$( nand_find_ubi "$CI_UBIPART" )"
-	if [ ! "$ubidev" ]; then
-		ubiattach -m "$mtdnum"
-		sync
-		ubidev="$( nand_find_ubi "$CI_UBIPART" )"
-	fi
-
-	# flash kernels
-	if [ "$kernel_length" != 0 -a -n "$kernel_mtd" -a -n "$kernel_backup_mtd" ]; then
-		echo "DEBUG: Flashing kernel from $tar_file to MTD $CI_KERNPART and kernel_backup"
-		#tar xf $tar_file sysupgrade-$board_name/kernel -O | mtd write - $CI_KERNPART
-		#tar xf $tar_file sysupgrade-$board_name/kernel -O | mtd write - kernel_backup
-	else
-		echo "DEBUG: Check Failed! kernel_length = $kernel_length, kernel_mtd = $kernel_mtd, kernel_backup_mtd = $kernel_backup_mtd"
-		return 1
-	fi
-
-	# kill ubi partitions
-	echo "DEBUG: Killing rootfs and rootfs_data on /dev/$ubidev"
-	#[ "$root_ubivol" ] && ubirmvol /dev/$ubidev -N rootfs || true
-	#[ "$data_ubivol" ] && ubirmvol /dev/$ubidev -N rootfs_data || true
-
-	# create rootfs
-	echo "DEBUG: Creating rootfs on /dev/$ubidev with a size of $rootfs_length"
-	#if ! ubimkvol /dev/$ubidev -N rootfs -s $rootfs_length; then
-	#	echo "cannot create rootfs volume"
-	#	return 1;
-	#fi
-
-	# create rootfs_data
-	echo "DEBUG: Creating rootfs_data on /dev/$ubidev with max size"
-	#if ! ubimkvol /dev/$ubidev -N rootfs_data -m; then
-	#	echo "cannot initialize rootfs_data volume"
-	#	return 1
-	#fi
-	sync
-
-	# We just rebuilt these, lets find them again!
-	root_ubivol="$( nand_find_volume $ubidev rootfs )"
-	data_ubivol="$( nand_find_volume $ubidev rootfs_data )"
-
-	# flash rootfs
-	echo "DEBUG: Flashing rootfs to /dev/$root_ubivol"
-	#tar xf $tar_file sysupgrade-$board_name/root -O | \
-	#	ubiupdatevol /dev/$root_ubivol -s $rootfs_length -
-
-	echo "DEBUG: Run nand_do_upgrade_success goes here!"
-	#nand_do_upgrade_success
+	# Do we need to do any platform tweaks?
+	case "$board_name" in
+	"mr18")
+		if [ -n "$kernel_backup_mtd" ]; then
+			# Flash backup kernel before we drop into stock flash function
+			echo "DEBUG: Flashing kernel_backup..."
+			tar xf $tar_file sysupgrade-$board_name/kernel -O | mtd write - kernel_backup
+		else
+			return 1
+		fi
+		nand_do_upgrade $1
+		;;
+	*)
+		nand_do_upgrade $1
+		;;
+	esac
 }
