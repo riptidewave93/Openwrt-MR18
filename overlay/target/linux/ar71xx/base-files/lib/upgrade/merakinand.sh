@@ -9,12 +9,6 @@
 . /lib/functions.sh
 . /lib/upgrade/nand.sh
 
-get_magic_at() {
-	local mtddev=$1
-	local pos=$2
-	dd bs=1 count=2 skip=$pos if=$mtddev 2>/dev/null | hexdump -v -n 4 -e '1/1 "%02x"'
-}
-
 merakinand_do_kernel_check() {
 	local board_name="$1"
 	local tar_file="$2"
@@ -65,12 +59,9 @@ merakinand_do_upgrade() {
 	"mr18")
 		if [ -n "$kernel_backup_mtd" ]; then
 			# Flash backup kernel before we drop into stock flash function
-			echo "DEBUG: Flashing kernel_backup..."
 			tar xf $tar_file sysupgrade-$board_name/kernel -O | mtd write - kernel_backup
-		else
-			return 1
+			nand_do_upgrade $1
 		fi
-		nand_do_upgrade $1
 		;;
 	*)
 		nand_do_upgrade $1
