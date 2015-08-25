@@ -14,6 +14,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
 #include <string.h>
 #include <libgen.h>
 #include <getopt.h>
@@ -46,8 +47,8 @@ struct board_info {
  */
 static char *progname;
 
-static char *board_id;
-static struct board_info *board;
+static char *board_id = NULL;
+static const struct board_info *board;
 
 static const struct board_info boards[] = {
 	{
@@ -82,8 +83,8 @@ static const struct board_info boards[] = {
 
 static const struct board_info *find_board (const char *id)
 {
-	struct board_info *ret;
-	struct board_info *board;
+	const struct board_info *ret;
+	const struct board_info *board;
 
 	ret = NULL;
 	for (board = boards; board->id != NULL; board++) {
@@ -99,7 +100,7 @@ static const struct board_info *find_board (const char *id)
 static void usage (int status)
 {
 	FILE *stream = (status != EXIT_SUCCESS) ? stderr : stdout;
-	struct board_info *board;
+	const struct board_info *board;
 
 	fprintf(stream, "Usage: %s [OPTIONS...]\n", progname);
 	fprintf(stream,
@@ -108,6 +109,7 @@ static void usage (int status)
 "  -B <board>      create image for the board specified with <board>\n"
 "  -i <file>       read kernel image from the file <file>\n"
 "  -o <file>       write output to the file <file>\n"
+"  -s              strip padding from the end of the image\n"
 "  -h              show this screen\n"
 	);
 
@@ -119,7 +121,7 @@ static void usage (int status)
 	exit(status);
 }
 
-int writel (unsigned char *buf, size_t offset, uint32_t value)
+void writel (unsigned char *buf, size_t offset, uint32_t value)
 {
 	value = htonl(value);
 	memcpy(buf + offset, &value, sizeof(uint32_t));
@@ -133,7 +135,8 @@ int main (int argc, char *argv[])
 	unsigned char *kernel;
 	size_t buflen;
 	unsigned char *buf;
-	char *ofname, *ifname;
+	bool strip_padding = false;
+	char *ofname = NULL, *ifname = NULL;
 	FILE *out, *in;
 
 	progname = basename(argv[0]);
@@ -141,7 +144,7 @@ int main (int argc, char *argv[])
 	while (1) {
 		int c;
 
-		c = getopt(argc, argv, "B:i:o:h");
+		c = getopt(argc, argv, "B:i:o:sh");
 		if (c == -1)
 			break;
 
@@ -154,6 +157,9 @@ int main (int argc, char *argv[])
 			break;
 		case 'o':
 			ofname = optarg;
+			break;
+		case 's':
+			strip_padding = true;
 			break;
 		case 'h':
 			usage(EXIT_SUCCESS);
@@ -187,7 +193,7 @@ int main (int argc, char *argv[])
 
 	in = fopen(ifname, "r");
 	if (in == NULL) {
-		ERRS("could not open \"%s\" for reading", ifname);
+		ERRS("could not open \"%s\" for reading: %s", ifname);
 		goto err;
 	}
 
@@ -200,14 +206,19 @@ int main (int argc, char *argv[])
 	rewind(in);
 
 	if (klen > kspace) {
-		ERR("file \"%s\" is too big - max size: 0x%08X\n",
+		ERR("file \"%s\" is too big - max size: 0x%08lX\n",
 		    ifname, kspace);
 		goto err_close_in;
 	}
 
+	/* If requested, resize buffer to remove padding */
+	if (strip_padding)
+		buflen = klen + HDR_LENGTH;
+
+	/* Allocate and initialize buffer for final image */
 	buf = malloc(buflen);
 	if (buf == NULL) {
-		ERRS("no memory for buffer\n");
+		ERRS("no memory for buffer: %s\n");
 		goto err_close_in;
 	}
 	memset(buf, PADDING_BYTE, buflen);
@@ -229,13 +240,12 @@ int main (int argc, char *argv[])
 	sha1_csum(kernel, klen, buf + HDR_OFF_CHECKSUM);
 	memcpy(buf + HDR_OFF_STATICHASH, board->statichash, 20);
 
+	/* Save finished image */
 	out = fopen(ofname, "w");
 	if (out == NULL) {
-		ERRS("could not open \"%s\" for writing", ofname);
+		ERRS("could not open \"%s\" for writing: %s", ofname);
 		goto err_free;
 	}
-
-	/* Save finished image */
 	fwrite(buf, buflen, 1, out);
 
 	ret = EXIT_SUCCESS;
