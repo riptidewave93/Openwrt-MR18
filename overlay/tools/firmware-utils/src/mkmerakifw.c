@@ -2,8 +2,9 @@
  * Copyright (C) 2015 Thomas Hebb <tommyhebb@gmail.com>
  *
  * The format of the header this tool generates was first documented by
- * Chris Blake in a shell script of the same purpose. I have created this
- * reimplementation at his request.
+ * Chris Blake <chrisrblake93 (at) gmail.com> in a shell script of the
+ * same purpose. I have created this reimplementation at his request. The
+ * original script can be found at https://github.com/riptidewave93/meraki-partbuilder
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as published

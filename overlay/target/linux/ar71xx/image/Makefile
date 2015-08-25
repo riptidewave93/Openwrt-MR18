@@ -1788,15 +1788,21 @@ Image/Build/CyberTANLZMA=$(call Image/Build/CyberTAN,$(1),$(2),$(3),$(4),$(5))
 define Image/Build/MerakiNAND/initramfs
 	$(eval kernelsize=$(call mtdpartsize,kernel,$(4)))
 	$(call PatchKernel,$(2),$(3) $(4),"-initramfs")
-	# Add header logic here to modify $(KDIR_TMP)/vmlinux-initramfs-$(2)
-	$(CP) $(KDIR_TMP)/vmlinux-initramfs-$(2) $(BIN_DIR)/$(IMG_PREFIX)-$(2)-initramfs.bin
+	-$(STAGING_DIR_HOST)/bin/mkmerakifw \
+		-B $(2) \
+		-i $(KDIR_TMP)/vmlinux-initramfs-$(2) \
+		-o $(KDIR_TMP)/vmlinux-initramfs-$(2)-patched
+	$(CP) $(KDIR_TMP)/vmlinux-initramfs-$(2)-patched $(BIN_DIR)/$(IMG_PREFIX)-$(2)-initramfs.bin
 endef
 
 define Image/Build/MerakiNAND/buildkernel
 	$(eval kernelsize=$(call mtdpartsize,kernel,$(4)))
 	$(call PatchKernel,$(2),$(3) $(4),"")
-	# Add header logic here to modify $(KDIR_TMP)/vmlinux-$(2)
-	$(CP) $(KDIR_TMP)/vmlinux-$(2) $(BIN_DIR)/$(IMG_PREFIX)-$(2)-kernel.bin
+	-$(STAGING_DIR_HOST)/bin/mkmerakifw \
+		-B $(2) \
+		-i $(KDIR_TMP)/vmlinux-$(2) \
+		-o $(KDIR_TMP)/vmlinux-$(2)-patched
+	$(CP) $(KDIR_TMP)/vmlinux-$(2)-patched $(BIN_DIR)/$(IMG_PREFIX)-$(2)-kernel.bin
 
 endef
 
@@ -1806,7 +1812,7 @@ define Image/Build/MerakiNAND
 	$(eval kernsize=$(call mtdpartsize,kernel,$(4)))
 	dd if=$(KDIR)/root.$(1) \
 			of=$(call imgname,$(1),$(2)-rootfs).bin bs=128k conv=sync; \
-	$(call Image/Build/SysupgradeNAND,$(2),squashfs,$(KDIR_TMP)/vmlinux-$(2))
+	$(call Image/Build/SysupgradeNAND,$(2),squashfs,$(KDIR_TMP)/vmlinux-$(2)-patched)
 endef
 
 
