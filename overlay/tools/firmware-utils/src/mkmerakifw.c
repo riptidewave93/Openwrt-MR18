@@ -14,6 +14,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
 #include <string.h>
 #include <libgen.h>
 #include <getopt.h>
@@ -108,6 +109,7 @@ static void usage (int status)
 "  -B <board>      create image for the board specified with <board>\n"
 "  -i <file>       read kernel image from the file <file>\n"
 "  -o <file>       write output to the file <file>\n"
+"  -s              strip padding from the end of the image\n"
 "  -h              show this screen\n"
 	);
 
@@ -133,6 +135,7 @@ int main (int argc, char *argv[])
 	unsigned char *kernel;
 	size_t buflen;
 	unsigned char *buf;
+	bool strip_padding = false;
 	char *ofname, *ifname;
 	FILE *out, *in;
 
@@ -141,7 +144,7 @@ int main (int argc, char *argv[])
 	while (1) {
 		int c;
 
-		c = getopt(argc, argv, "B:i:o:h");
+		c = getopt(argc, argv, "B:i:o:sh");
 		if (c == -1)
 			break;
 
@@ -154,6 +157,9 @@ int main (int argc, char *argv[])
 			break;
 		case 'o':
 			ofname = optarg;
+			break;
+		case 's':
+			strip_padding = true;
 			break;
 		case 'h':
 			usage(EXIT_SUCCESS);
@@ -204,6 +210,10 @@ int main (int argc, char *argv[])
 		    ifname, kspace);
 		goto err_close_in;
 	}
+
+	/* If requested, resize buffer to remove padding */
+	if (strip_padding)
+		buflen = klen + HDR_LENGTH;
 
 	buf = malloc(buflen);
 	if (buf == NULL) {
