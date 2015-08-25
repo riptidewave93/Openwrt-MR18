@@ -20,10 +20,11 @@
 #include <asm/mach-ath79/ar71xx_regs.h>
 
 #include <linux/leds-nu801.h>
+#include <linux/pci.h>
 
 #include "common.h"
-#include "dev-ap9x-pci.h"
 #include "dev-eth.h"
+#include "pci.h"
 #include "dev-gpio-buttons.h"
 #include "dev-leds-gpio.h"
 #include "dev-nfc.h"
@@ -167,16 +168,23 @@ static int mr18_extract_sgmii_res_cal(void)
 	return reversed_sgmii_value;
 }
 
+static struct ath9k_platform_data pci_main_wifi_data = {
+        .led_pin = -1,
+};
+static struct ath9k_platform_data pci_scan_wifi_data = {
+        .led_pin = -1,
+};
+
 static int mr18_dual_pci_plat_dev_init(struct pci_dev *dev)
 {
 	printk(KERN_INFO "Request for device %x at bus:%x, slot:%x\n",
 	       dev->devfn, PCI_BUS_NUM(dev->devfn), PCI_SLOT(dev->devfn));
 	switch (PCI_BUS_NUM(dev->devfn)) {
 	case 0:
-		dev->dev.platform_data = &ap9x_wmac0_data;
+		dev->dev.platform_data = &pci_main_wifi_data;
 		break;
 	case 1:
-		dev->dev.platform_data = &ap9x_wmac1_data;
+		dev->dev.platform_data = &pci_scan_wifi_data;
 		break;
 	}
 
@@ -236,8 +244,8 @@ static void __init mr18_setup(void)
 	/* WiFi */
 	ath79_register_wmac_simple();
 
-	ap9x_wmac0_data.eeprom_name = "pci_wmac0.eeprom";
-	ap9x_wmac1_data.eeprom_name = "pci_wmac1.eeprom";
+	pci_main_wifi_data.eeprom_name = "pci_wmac0.eeprom";
+	pci_scan_wifi_data.eeprom_name = "pci_wmac1.eeprom";
 	ath79_pci_set_plat_dev_init(mr18_dual_pci_plat_dev_init);
 	ath79_register_pci();
 }
