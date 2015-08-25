@@ -177,9 +177,13 @@ static struct ath9k_platform_data pci_scan_wifi_data = {
 
 static int mr18_dual_pci_plat_dev_init(struct pci_dev *dev)
 {
-	printk(KERN_INFO "Request for device %x at bus:%x, slot:%x\n",
-	       dev->devfn, PCI_BUS_NUM(dev->devfn), PCI_SLOT(dev->devfn));
-	switch (PCI_BUS_NUM(dev->devfn)) {
+#ifdef DIRTY_HACK_BEST_HACK
+	static int state; // initialized to 0
+	switch (state++) {
+#else
+	printk(KERN_INFO "Requested device %x maybe at %x?\n",dev->devfn, dev->bus->number);
+	switch (dev->bus->number) { // or dev->subordinate->number
+#endif
 	case 0:
 		dev->dev.platform_data = &pci_main_wifi_data;
 		break;
