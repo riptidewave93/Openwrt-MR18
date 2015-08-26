@@ -18,7 +18,6 @@ To Do
 -----
 ##### MR18
   * Fix Sysupgrade bug with config restore
-  * Fix MAC on WLAN2
 
 Working
 -----
