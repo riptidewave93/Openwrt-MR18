@@ -169,10 +169,10 @@ static int mr18_extract_sgmii_res_cal(void)
 }
 
 static struct ath9k_platform_data pci_main_wifi_data = {
-        .led_pin = -1,
+	.led_pin = -1,
 };
 static struct ath9k_platform_data pci_scan_wifi_data = {
-        .led_pin = -1,
+	.led_pin = -1,
 };
 
 static int mr18_dual_pci_plat_dev_init(struct pci_dev *dev)
@@ -212,7 +212,7 @@ static void __init mr18_setup(void)
 	if (res >= 0) {
 		/* Setup SoC Eth Config */
 		ath79_setup_qca955x_eth_cfg(QCA955X_ETH_CFG_RGMII_EN);
-		ath79_setup_qca955x_eth_rx_delay(3,3);
+		ath79_setup_qca955x_eth_rx_delay(3, 3);
 
 		/* MDIO Interface */
 		ath79_register_mdio(0, 0x0);

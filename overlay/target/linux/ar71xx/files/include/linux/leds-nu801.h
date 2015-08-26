@@ -25,7 +25,7 @@ struct led_nu801_template {
 	u32 ndelay;		/* Delay in nanoseconds */
 	enum led_brightness init_brightness[3]; /* Default rgb state */
 #ifdef CONFIG_LEDS_TRIGGERS
-	const char* default_trigger; /* default trigger */
+	const char *default_trigger; /* default trigger */
 #endif
 	const char *led_colors[3];  /* rgb color order */
 };

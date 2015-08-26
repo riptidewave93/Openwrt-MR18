@@ -4,7 +4,8 @@
  * The format of the header this tool generates was first documented by
  * Chris Blake <chrisrblake93 (at) gmail.com> in a shell script of the
  * same purpose. I have created this reimplementation at his request. The
- * original script can be found at https://github.com/riptidewave93/meraki-partbuilder
+ * original script can be found at:
+ * <https://github.com/riptidewave93/meraki-partbuilder>
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as published
@@ -47,7 +48,7 @@ struct board_info {
  */
 static char *progname;
 
-static char *board_id = NULL;
+static char *board_id;
 static const struct board_info *board;
 
 static const struct board_info boards[] = {
@@ -71,7 +72,7 @@ static const struct board_info boards[] = {
 #define ERR(fmt, ...) do { \
 	fflush(0); \
 	fprintf(stderr, "[%s] *** error: " fmt "\n", \
-			progname, ## __VA_ARGS__ ); \
+			progname, ## __VA_ARGS__); \
 } while (0)
 
 #define ERRS(fmt, ...) do { \
@@ -81,7 +82,7 @@ static const struct board_info boards[] = {
 			progname, ## __VA_ARGS__, strerror(save)); \
 } while (0)
 
-static const struct board_info *find_board (const char *id)
+static const struct board_info *find_board(const char *id)
 {
 	const struct board_info *ret;
 	const struct board_info *board;
@@ -97,7 +98,7 @@ static const struct board_info *find_board (const char *id)
 	return ret;
 }
 
-static void usage (int status)
+static void usage(int status)
 {
 	FILE *stream = (status != EXIT_SUCCESS) ? stderr : stdout;
 	const struct board_info *board;
@@ -114,20 +115,19 @@ static void usage (int status)
 	);
 
 	fprintf(stream, "\nBoards:\n");
-	for (board = boards; board->id != NULL; board++) {
+	for (board = boards; board->id != NULL; board++)
 		fprintf(stream, "  %-16s%s\n", board->id, board->description);
-	}
 
 	exit(status);
 }
 
-void writel (unsigned char *buf, size_t offset, uint32_t value)
+void writel(unsigned char *buf, size_t offset, uint32_t value)
 {
 	value = htonl(value);
 	memcpy(buf + offset, &value, sizeof(uint32_t));
 }
 
-int main (int argc, char *argv[])
+int main(int argc, char *argv[])
 {
 	int ret = EXIT_FAILURE;
 	long klen;
