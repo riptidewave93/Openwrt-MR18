@@ -13,6 +13,8 @@ ath9k_eeprom_extract() {
 
 	mtd=$(find_mtd_chardev $part)
 	[ -n "$mtd" ] || \
+		mtd=/dev/$(nand_find_volume /dev/ubi0 $part)
+	[ -n "$mtd" ] || \
 		ath9k_eeprom_die "no mtd device found for partition $part"
 
 	dd if=$mtd of=/lib/firmware/$FIRMWARE bs=1 skip=$offset count=$count 2>/dev/null || \
