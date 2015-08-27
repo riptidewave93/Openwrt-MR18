@@ -1,6 +1,4 @@
 #!/bin/sh
-. /lib/upgrade/nand.sh
-
 ath9k_eeprom_die() {
 	echo "ath9k eeprom: " "$*"
 	exit 1
@@ -10,7 +8,7 @@ ath9k_eeprom_extract() {
 	local part=$1
 	local offset=$2
 	local count=$3
-	local ubidev=$(nand_find_ubi $part)
+	local ubidev=$( nand_find_ubi $CI_UBIPART )
 	local mtd
 
 	mtd=$(find_mtd_chardev $part)
@@ -33,9 +31,11 @@ ath9k_patch_firmware_mac() {
 
 [ -e /lib/firmware/$FIRMWARE ] && exit 0
 
+
 . /lib/ar71xx.sh
 . /lib/functions.sh
 . /lib/functions/system.sh
+. /lib/upgrade/nand.sh
 
 board=$(ar71xx_board_name)
 
@@ -43,7 +43,7 @@ case "$FIRMWARE" in
 "soc_wmac.eeprom")
 	case $board in
 	mr18)
-		if [ -n "$(nand_find_volume "/dev/ubi0" caldata )" ]; then
+		if [ -n "$(nand_find_volume ubi0 caldata)" ]; then
 			ath9k_eeprom_extract "caldata" 4096 2048
 		else
 			ath9k_eeprom_extract "odm-caldata" 4096 2048
@@ -65,7 +65,7 @@ case "$FIRMWARE" in
 "pci_wmac0.eeprom")
 	case $board in
 	mr18)
-		if [ -n "$(nand_find_volume /dev/ubi0 caldata)" ]; then
+		if [ -n "$(nand_find_volume ubi0 caldata)" ]; then
 			ath9k_eeprom_extract "caldata" 20480 2048
 		else
 			ath9k_eeprom_extract "odm-caldata" 20480 2048
@@ -86,7 +86,7 @@ case "$FIRMWARE" in
 "pci_wmac1.eeprom")
 	case $board in
 	mr18)
-		if [ -n "$(nand_find_volume /dev/ubi0 caldata)" ]; then
+		if [ -n "$(nand_find_volume ubi0 caldata)" ]; then
 			ath9k_eeprom_extract "caldata" 36864 2048
 		else
 			ath9k_eeprom_extract "odm-caldata" 36864 2048
