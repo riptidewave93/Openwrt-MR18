@@ -17,7 +17,8 @@ Images by default will be moved to the root dir of the repo.
 To Do
 -----
 ##### MR18
-  * Fix Sysupgrade bug with config restore
+  * Code Cleanup?
+  * Start merging things into official nightlies!
 
 Working
 -----
@@ -33,4 +34,4 @@ Working
 
 Notice
 ------
-This is CLOSE to being ready for an actual unofficial "release" so keep kicking butt! :)
+No promises this won't brick your AP, and no promises that this will even work!
