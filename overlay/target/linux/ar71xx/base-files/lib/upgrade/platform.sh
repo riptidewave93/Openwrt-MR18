@@ -263,6 +263,7 @@ platform_check_image() {
 		return 1
 		;;
 
+	bsb | \
 	dir-825-b1 | \
 	tew-673gru)
 		dir825b_check_image "$1" && return 0
@@ -340,6 +341,7 @@ platform_check_image() {
 	tl-wdr3500 | \
 	tl-wdr4300 | \
 	tl-wdr4900-v2 | \
+	tl-wdr6500-v2 | \
 	tl-wr703n | \
 	tl-wr710n | \
 	tl-wr720n-v3 | \
@@ -357,7 +359,15 @@ platform_check_image() {
 	tl-wr1043nd | \
 	tl-wr1043nd-v2 | \
 	tl-wr2543n)
-		[ "$magic" != "0100" ] && {
+		local magic_ver="0100"
+
+		case "$board" in
+		tl-wdr6500-v2)
+			magic_ver="0200"
+			;;
+		esac
+
+		[ "$magic" != "$magic_ver" ] && {
 			echo "Invalid image type."
 			return 1
 		}
