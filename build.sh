@@ -2,7 +2,6 @@
 
 firstbuild=0
 clonedir=./openwrt
-partbuilderdir=./meraki-partbuilder
 cpu_num=$(grep -c processor /proc/cpuinfo)
 
 # Print messages in cyan blue
@@ -28,21 +27,11 @@ if [ ! -d $clonedir ]; then
   cd - > /dev/null
 fi
 
-if [ ! -d $partbuilderdir ]; then
-  Msg "Cloning Nandloader Image Builder..."
-  git clone https://github.com/riptidewave93/meraki-partbuilder.git $partbuilderdir
-  chmod +x $partbuilderdir/partbuilder.sh
-fi
 
 if [ $firstbuild = "0" ]; then
   Msg "Cleaning Builddir..."
-  rm ./openwrt-ar71xx-nand-vmlinux-initramfs-nandloader-part1.bin 2> /dev/null
-  rm ./openwrt-ar71xx-nand-vmlinux-nandloader-part1.bin 2> /dev/null
-  rm ./openwrt-ar71xx-nand-vmlinux-initramfs.elf 2> /dev/null
   cd $clonedir
   rm -rf ./bin
-  # make target/linux/clean
-  rm -rf ./build_dir/target-mips_34kc_musl-1.1.10/linux-ar71xx_nand/linux-4*
   cd - > /dev/null
 fi
 

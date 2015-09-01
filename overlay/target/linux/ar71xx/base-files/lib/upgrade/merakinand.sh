@@ -9,6 +9,74 @@
 . /lib/functions.sh
 . /lib/upgrade/nand.sh
 
+get_magic_at() {
+	local mtddev=$1
+	local pos=$2
+	dd bs=1 count=2 skip=$pos if=$mtddev 2>/dev/null | hexdump -v -n 4 -e '1/1 "%02x"'
+}
+
+mr18_is_caldata_valid() {
+	local mtddev=$1
+	local magic
+
+	magic=$(get_magic_at $mtddev 4096)
+	[ "$magic" != "0202" ] && return 0
+
+	magic=$(get_magic_at $mtddev 20480)
+	[ "$magic" != "0202" ] && return 0
+
+	magic=$(get_magic_at $mtddev 36864)
+	[ "$magic" != "0202" ] && return 0
+
+	return 1
+}
+
+merakinand_copy_caldata() {
+	local cal_src=$1
+	local cal_dst=$2
+	local ubidev=$( nand_find_ubi $CI_UBIPART )
+	local board_name="$(cat /tmp/sysinfo/board_name)"
+	local rootfs_size="$(ubinfo /dev/ubi0 -N rootfs_data | grep "Size" | awk '{ print $6 }')"
+
+	# Setup partitions using board name, in case of future platforms
+	case "$board_name" in
+	"mr18")
+		# Src is MTD
+		mtd_src=$(find_mtd_chardev $cal_src)
+		[ -n "$mtd_src" ] || {
+			echo "no mtd device found for partition $cal_src"
+			exit 1
+		}
+
+		# Dest is UBI
+		# To:Do possibly add create (hard to do when rootfs_data is expanded)
+		mtd_dst="/dev/$(nand_find_volume $ubidev $cal_dst)"
+		[ -n "$mtd_dst" ] || {
+			echo "no ubi device found for partition $cal_dst"
+			exit 1
+		}
+
+		mr18_is_caldata_valid "$mtd_src" && {
+			echo "no valid calibration data found in $cal_src"
+			exit 1
+		}
+
+		mr18_is_caldata_valid "$mtd_dst" && {
+			echo "Copying calibration data from $cal_src to $cal_dst..."
+			dd if="$mtd_src" of=/tmp/caldata.tmp 2>/dev/null
+			ubiupdatevol "$mtd_dst" /tmp/caldata.tmp
+			rm /tmp/caldata.tmp
+			sync
+		}
+		return 0
+		;;
+	*)
+		echo "Unsupported device $board_name";
+		return 1
+		;;
+	esac
+}
+
 merakinand_do_kernel_check() {
 	local board_name="$1"
 	local tar_file="$2"
@@ -57,14 +125,17 @@ merakinand_do_upgrade() {
 	# Do we need to do any platform tweaks?
 	case "$board_name" in
 	"mr18")
+		# Check and create UBI caldata if it's invalid
+		merakinand_copy_caldata "odm-caldata" "caldata"
+		# Flash backup kernel before we drop into stock flash function
 		if [ -n "$kernel_backup_mtd" ]; then
-			# Flash backup kernel before we drop into stock flash function
 			tar xf $tar_file sysupgrade-$board_name/kernel -O | mtd write - kernel_backup
-			nand_do_upgrade $1
 		fi
+		nand_do_upgrade $1
 		;;
 	*)
-		nand_do_upgrade $1
+		echo "Unsupported device $board_name";
+		exit 1
 		;;
 	esac
 }
