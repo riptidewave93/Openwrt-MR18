@@ -120,17 +120,12 @@ merakinand_do_platform_check() {
 merakinand_do_upgrade() {
 	local tar_file="$1"
 	local board_name="$(cat /tmp/sysinfo/board_name)"
-	local kernel_backup_mtd="$(find_mtd_index kernel_backup)"
 
 	# Do we need to do any platform tweaks?
 	case "$board_name" in
 	"mr18")
 		# Check and create UBI caldata if it's invalid
 		merakinand_copy_caldata "odm-caldata" "caldata"
-		# Flash backup kernel before we drop into stock flash function
-		if [ -n "$kernel_backup_mtd" ]; then
-			tar xf $tar_file sysupgrade-$board_name/kernel -O | mtd write - kernel_backup
-		fi
 		nand_do_upgrade $1
 		;;
 	*)

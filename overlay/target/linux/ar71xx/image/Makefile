@@ -1219,7 +1219,7 @@ dragino2_mtdlayout=mtdparts=spi0.0:256k(u-boot)ro,16000k(firmware),64k(config)ro
 hiwifi_hc6361_mtdlayout=mtdparts=spi0.0:64k(u-boot)ro,64k(bdinfo)ro,1280k(kernel),14848k(rootfs),64k(backup)ro,64k(art)ro,16128k@0x20000(firmware)
 mr12_mtdlayout=mtdparts=spi0.0:256k(u-boot)ro,256k(u-boot-env)ro,13440k(rootfs),2304k(kernel),128k(art)ro,15744k@0x80000(firmware)
 mr16_mtdlayout=mtdparts=spi0.0:256k(u-boot)ro,256k(u-boot-env)ro,13440k(rootfs),2304k(kernel),128k(art)ro,15744k@0x80000(firmware)
-mr18_mtdlayout=mtdparts=ar934x-nfc:512k(nandloader)ro,8M(kernel),8M(kernel_backup),113664k(ubi),128k@130944k(odm-caldata)ro
+mr18_mtdlayout=mtdparts=ar934x-nfc:512k(nandloader)ro,8M(kernel),8M(recovery),113664k(ubi),128k@130944k(odm-caldata)ro
 pb92_mtdlayout=mtdparts=spi0.0:256k(u-boot)ro,64k(u-boot-env)ro,2752k(rootfs),896k(kernel),64k(nvram),64k(art)ro,3648k@0x50000(firmware)
 planex_mtdlayout=mtdparts=spi0.0:256k(u-boot)ro,64k(u-boot-env)ro,7744k(firmware),128k(art)ro
 ubntxm_mtdlayout=mtdparts=spi0.0:256k(u-boot)ro,64k(u-boot-env)ro,7552k(firmware),256k(cfg)ro,64k(EEPROM)ro
