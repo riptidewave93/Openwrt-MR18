@@ -12,7 +12,7 @@ Building
 #### Modify Configs and Build
 `./build.sh modify`
 
-Images by default will be moved to the root dir of the repo.
+Note that you will need to run a modify on the first compile to select the NAND image in the OpenWRT menuconfig.
 
 To Do
 -----
