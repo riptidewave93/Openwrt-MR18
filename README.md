@@ -2,7 +2,7 @@
 
 Bringup repo for the Cisco Meraki MR18 on OpenWRT!
 
-Code is based on revision http://git.openwrt.org/?p=openwrt.git;a=commit;h=52f52061f436fde48f76d72b20cee7582be9147a
+Code is based on revision http://git.openwrt.org/?p=openwrt.git;a=commit;h=dfa904f762846dc0e9d46119490d2466c4b95b60
 
 Building
 -----

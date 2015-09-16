@@ -1,4 +1,5 @@
 #!/bin/sh
+
 ath9k_eeprom_die() {
 	echo "ath9k eeprom: " "$*"
 	exit 1
