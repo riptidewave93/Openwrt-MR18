@@ -488,6 +488,9 @@ platform_pre_upgrade() {
 	wndr4300 )
 		nand_do_upgrade "$1"
 		;;
+	mr18 )
+		merakinand_do_upgrade "$1"
+		;;
 	esac
 }
 

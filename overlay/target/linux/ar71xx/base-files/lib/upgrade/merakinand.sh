@@ -49,8 +49,9 @@ merakinand_copy_caldata() {
 		}
 
 		# Dest is UBI
-		# To:Do possibly add create (hard to do when rootfs_data is expanded)
-		mtd_dst="/dev/$(nand_find_volume $ubidev $cal_dst)"
+		# To:Do possibly add create (hard to do when rootfs_data is expanded & mounted)
+		# Would need to be done from ramdisk
+		mtd_dst="$(nand_find_volume $ubidev $cal_dst)"
 		[ -n "$mtd_dst" ] || {
 			echo "no ubi device found for partition $cal_dst"
 			exit 1
@@ -61,10 +62,10 @@ merakinand_copy_caldata() {
 			exit 1
 		}
 
-		mr18_is_caldata_valid "$mtd_dst" && {
+		mr18_is_caldata_valid "/dev/$mtd_dst" && {
 			echo "Copying calibration data from $cal_src to $cal_dst..."
 			dd if="$mtd_src" of=/tmp/caldata.tmp 2>/dev/null
-			ubiupdatevol "$mtd_dst" /tmp/caldata.tmp
+			ubiupdatevol "/dev/$mtd_dst" /tmp/caldata.tmp
 			rm /tmp/caldata.tmp
 			sync
 		}
