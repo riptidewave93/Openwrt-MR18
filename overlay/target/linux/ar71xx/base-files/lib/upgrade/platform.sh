@@ -252,7 +252,8 @@ platform_check_image() {
 	nbg460n_550n_550nh | \
 	unifi | \
 	unifi-outdoor | \
-	carambola2 )
+	carambola2 | \
+	weio )
 		[ "$magic" != "2705" ] && {
 			echo "Invalid image type."
 			return 1
@@ -488,7 +489,7 @@ platform_pre_upgrade() {
 	wndr4300 )
 		nand_do_upgrade "$1"
 		;;
-	mr18 )
+	mr18)
 		merakinand_do_upgrade "$1"
 		;;
 	esac

@@ -32,7 +32,6 @@ ath9k_patch_firmware_mac() {
 
 [ -e /lib/firmware/$FIRMWARE ] && exit 0
 
-
 . /lib/ar71xx.sh
 . /lib/functions.sh
 . /lib/functions/system.sh
