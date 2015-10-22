@@ -49,7 +49,7 @@ merakinand_copy_caldata() {
 		}
 
 		# Dest is UBI
-		# To:Do possibly add create (hard to do when rootfs_data is expanded & mounted)
+		# TODO: possibly add create (hard to do when rootfs_data is expanded & mounted)
 		# Would need to be done from ramdisk
 		mtd_dst="$(nand_find_volume $ubidev $cal_dst)"
 		[ -n "$mtd_dst" ] || {
