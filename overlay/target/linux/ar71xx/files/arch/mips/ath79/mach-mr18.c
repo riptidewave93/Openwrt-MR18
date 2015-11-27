@@ -168,6 +168,48 @@ static int mr18_extract_sgmii_res_cal(void)
 	return reversed_sgmii_value;
 }
 
+#define QCA955X_PLL_ETH_SGMII_SERDES_REG		0x004c
+#define QCA955X_PLL_ETH_SGMII_SERDES_LOCK_DETECT	BIT(2)
+#define QCA955X_PLL_ETH_SGMII_SERDES_PLL_REFCLK		BIT(1)
+#define QCA955X_PLL_ETH_SGMII_SERDES_EN_PLL		BIT(0)
+
+#define QCA955X_GMAC_REG_SGMII_SERDES			0x0018
+#define QCA955X_SGMII_SERDES_RES_CALIBRATION		BIT(23)
+#define QCA955X_SGMII_SERDES_RES_CALIBRATION_MASK	0xf
+#define QCA955X_SGMII_SERDES_RES_CALIBRATION_SHIFT	23
+#define QCA955X_SGMII_SERDES_LOCK_DETECT_STATUS		BIT(15)
+
+static void mr18_setup_qca955x_eth_serdes_cal(unsigned int sgmii_value)
+{
+	void __iomem *ethbase, *pllbase;
+	u32 t;
+
+	ethbase = ioremap_nocache(QCA955X_GMAC_BASE, QCA955X_GMAC_SIZE);
+	pllbase = ioremap_nocache(AR71XX_PLL_BASE, AR71XX_PLL_SIZE);
+
+	/* To Check the locking of the SGMII PLL */
+	t = __raw_readl(ethbase + QCA955X_GMAC_REG_SGMII_SERDES);
+	t &= ~(QCA955X_SGMII_SERDES_RES_CALIBRATION_MASK <<
+	       QCA955X_SGMII_SERDES_RES_CALIBRATION_SHIFT);
+	t |= (sgmii_value & QCA955X_SGMII_SERDES_RES_CALIBRATION_MASK) <<
+	     QCA955X_SGMII_SERDES_RES_CALIBRATION_SHIFT;
+	__raw_writel(t, ethbase + QCA955X_GMAC_REG_SGMII_SERDES);
+
+	__raw_writel(QCA955X_PLL_ETH_SGMII_SERDES_LOCK_DETECT |
+		     QCA955X_PLL_ETH_SGMII_SERDES_PLL_REFCLK |
+		     QCA955X_PLL_ETH_SGMII_SERDES_EN_PLL,
+		     pllbase + QCA955X_PLL_ETH_SGMII_SERDES_REG);
+
+	ath79_device_reset_clear(QCA955X_RESET_SGMII_ANALOG);
+	ath79_device_reset_clear(QCA955X_RESET_SGMII);
+
+	while (!(__raw_readl(ethbase + QCA955X_GMAC_REG_SGMII_SERDES) &
+		QCA955X_SGMII_SERDES_LOCK_DETECT_STATUS));
+
+	iounmap(ethbase);
+	iounmap(pllbase);
+}
+
 static struct ath9k_platform_data pci_main_wifi_data = {
 	.led_pin = -1,
 };
@@ -217,7 +259,7 @@ static void __init mr18_setup(void)
 		/* MDIO Interface */
 		ath79_register_mdio(0, 0x0);
 
-		ath79_setup_qca955x_eth_serdes_cal(res);
+		mr18_setup_qca955x_eth_serdes_cal(res);
 
 		/* GMAC0 is connected to an Atheros AR8035-A */
 		ath79_init_mac(ath79_eth0_data.mac_addr, NULL, 0);
