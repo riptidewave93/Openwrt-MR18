@@ -1,4 +1,10 @@
 #!/bin/sh
+[ -e /lib/firmware/$FIRMWARE ] && exit 0
+
+. /lib/ar71xx.sh
+. /lib/functions.sh
+. /lib/functions/system.sh
+. /lib/upgrade/nand.sh
 
 ath9k_eeprom_die() {
 	echo "ath9k eeprom: " "$*"
@@ -41,13 +47,6 @@ ath9k_patch_firmware_mac() {
 
 	macaddr_2bin $mac | dd of=/lib/firmware/$FIRMWARE conv=notrunc bs=1 seek=2 count=6
 }
-
-[ -e /lib/firmware/$FIRMWARE ] && exit 0
-
-. /lib/ar71xx.sh
-. /lib/functions.sh
-. /lib/functions/system.sh
-. /lib/upgrade/nand.sh
 
 board=$(ar71xx_board_name)
 
