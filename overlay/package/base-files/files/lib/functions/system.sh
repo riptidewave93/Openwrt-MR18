@@ -47,8 +47,8 @@ mtd_get_mac_binary_ubi() {
 
 	. /lib/upgrade/nand.sh
 
-	local ubidev=$( nand_find_ubi $CI_UBIPART )
-	local part="$( nand_find_volume $ubidev $1 )"
+	local ubidev=$(nand_find_ubi $CI_UBIPART)
+	local part=$(nand_find_volume $ubidev $1)
 
 	if [ -z "$part" ]; then
 		echo "mtd_get_mac_binary: ubi partition $mtdname not found!" >&2
