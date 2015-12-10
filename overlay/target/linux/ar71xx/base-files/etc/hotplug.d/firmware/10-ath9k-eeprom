@@ -1,4 +1,10 @@
 #!/bin/sh
+[ -e /lib/firmware/$FIRMWARE ] && exit 0
+
+. /lib/ar71xx.sh
+. /lib/functions.sh
+. /lib/functions/system.sh
+. /lib/upgrade/nand.sh
 
 ath9k_eeprom_die() {
 	echo "ath9k eeprom: " "$*"
@@ -9,16 +15,28 @@ ath9k_eeprom_extract() {
 	local part=$1
 	local offset=$2
 	local count=$3
-	local ubidev=$( nand_find_ubi $CI_UBIPART )
 	local mtd
 
 	mtd=$(find_mtd_chardev $part)
 	[ -n "$mtd" ] || \
-		mtd="/dev/$(nand_find_volume $ubidev $part)"
-		[ -n "$mtd" ] || \
-			ath9k_eeprom_die "no mtd device found for partition $part"
+		ath9k_eeprom_die "no mtd device found for partition $part"
 
 	dd if=$mtd of=/lib/firmware/$FIRMWARE bs=1 skip=$offset count=$count 2>/dev/null || \
+		ath9k_eeprom_die "failed to extract from $mtd"
+}
+
+ath9k_ubi_eeprom_extract() {
+	local part=$1
+	local offset=$2
+	local count=$3
+	local ubidev=$(nand_find_ubi $CI_UBIPART)
+	local mtd
+
+	mtd=$(nand_find_volume $ubidev $part)
+	[ -n "$mtd" ] || \
+		ath9k_eeprom_die "no UBI volume found for $part"
+
+	dd if=/dev/$mtd of=/lib/firmware/$FIRMWARE bs=1 skip=$offset count=$count 2>/dev/null || \
 		ath9k_eeprom_die "failed to extract from $mtd"
 }
 
@@ -30,13 +48,6 @@ ath9k_patch_firmware_mac() {
 	macaddr_2bin $mac | dd of=/lib/firmware/$FIRMWARE conv=notrunc bs=1 seek=2 count=6
 }
 
-[ -e /lib/firmware/$FIRMWARE ] && exit 0
-
-. /lib/ar71xx.sh
-. /lib/functions.sh
-. /lib/functions/system.sh
-. /lib/upgrade/nand.sh
-
 board=$(ar71xx_board_name)
 
 case "$FIRMWARE" in
@@ -44,7 +55,7 @@ case "$FIRMWARE" in
 	case $board in
 	mr18)
 		if [ -n "$(nand_find_volume ubi0 caldata)" ]; then
-			ath9k_eeprom_extract "caldata" 4096 2048
+			ath9k_ubi_eeprom_extract "caldata" 4096 2048
 		else
 			ath9k_eeprom_extract "odm-caldata" 4096 2048
 		fi
@@ -66,7 +77,7 @@ case "$FIRMWARE" in
 	case $board in
 	mr18)
 		if [ -n "$(nand_find_volume ubi0 caldata)" ]; then
-			ath9k_eeprom_extract "caldata" 20480 2048
+			ath9k_ubi_eeprom_extract "caldata" 20480 2048
 		else
 			ath9k_eeprom_extract "odm-caldata" 20480 2048
 		fi
@@ -87,7 +98,7 @@ case "$FIRMWARE" in
 	case $board in
 	mr18)
 		if [ -n "$(nand_find_volume ubi0 caldata)" ]; then
-			ath9k_eeprom_extract "caldata" 36864 2048
+			ath9k_ubi_eeprom_extract "caldata" 36864 2048
 		else
 			ath9k_eeprom_extract "odm-caldata" 36864 2048
 		fi
