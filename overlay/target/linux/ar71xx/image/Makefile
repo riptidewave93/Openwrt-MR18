@@ -1494,7 +1494,6 @@ dragino2_mtdlayout=mtdparts=spi0.0:256k(u-boot)ro,16000k(firmware),64k(config)ro
 hiwifi_hc6361_mtdlayout=mtdparts=spi0.0:64k(u-boot)ro,64k(bdinfo)ro,1280k(kernel),14848k(rootfs),64k(backup)ro,64k(art)ro,16128k@0x20000(firmware)
 mr12_mtdlayout=mtdparts=spi0.0:256k(u-boot)ro,256k(u-boot-env)ro,13440k(rootfs),2304k(kernel),128k(art)ro,15744k@0x80000(firmware)
 mr16_mtdlayout=mtdparts=spi0.0:256k(u-boot)ro,256k(u-boot-env)ro,13440k(rootfs),2304k(kernel),128k(art)ro,15744k@0x80000(firmware)
-mr18_mtdlayout=mtdparts=ar934x-nfc:512k(nandloader)ro,8M(kernel),8M(recovery),113664k(ubi),128k@130944k(odm-caldata)ro
 pb92_mtdlayout=mtdparts=spi0.0:256k(u-boot)ro,64k(u-boot-env)ro,2752k(rootfs),896k(kernel),64k(nvram),64k(art)ro,3648k@0x50000(firmware)
 planex_mtdlayout=mtdparts=spi0.0:256k(u-boot)ro,64k(u-boot-env)ro,7744k(firmware),128k(art)ro
 ubntxm_mtdlayout=mtdparts=spi0.0:256k(u-boot)ro,64k(u-boot-env)ro,7552k(firmware),256k(cfg)ro,64k(EEPROM)ro
@@ -1976,36 +1975,13 @@ Image/Build/CyberTANLZMA/buildkernel=$(call MkuImageLzma,$(2),$(3) $(4))
 Image/Build/CyberTANLZMA=$(call Image/Build/CyberTAN,$(1),$(2),$(3),$(4),$(5))
 
 
-define Image/Build/MerakiNAND/initramfs
-	$(eval kernelsize=$(call mtdpartsize,kernel,$(4)))
-	$(call PatchKernel,$(2),$(3) $(4),"-initramfs")
+define Build/MerakiNAND
 	-$(STAGING_DIR_HOST)/bin/mkmerakifw \
-		-B $(2) -s \
-		-i $(KDIR_TMP)/vmlinux-initramfs-$(2) \
-		-o $(KDIR_TMP)/vmlinux-initramfs-$(2)-patched
-	$(CP) $(KDIR_TMP)/vmlinux-initramfs-$(2)-patched $(BIN_DIR)/$(IMG_PREFIX)-$(2)-initramfs.bin
+		-B $(BOARDNAME) -s \
+		-i $@ \
+		-o $@.new
+	@mv $@.new $@
 endef
-
-define Image/Build/MerakiNAND/buildkernel
-	$(eval kernelsize=$(call mtdpartsize,kernel,$(4)))
-	$(call PatchKernel,$(2),$(3) $(4),"")
-	-$(STAGING_DIR_HOST)/bin/mkmerakifw \
-		-B $(2) -s \
-		-i $(KDIR_TMP)/vmlinux-$(2) \
-		-o $(KDIR_TMP)/vmlinux-$(2)-patched
-	$(CP) $(KDIR_TMP)/vmlinux-$(2)-patched $(BIN_DIR)/$(IMG_PREFIX)-$(2)-kernel.bin
-
-endef
-
-define Image/Build/MerakiNAND
-	$(eval fwsize=$(call mtdpartsize,firmware,$(4)))
-	$(eval rootsize=$(call mtdpartsize,rootfs,$(4)))
-	$(eval kernsize=$(call mtdpartsize,kernel,$(4)))
-	dd if=$(KDIR)/root.$(1) \
-			of=$(call imgname,$(1),$(2)-rootfs).bin bs=128k conv=sync; \
-	$(call Image/Build/SysupgradeNAND,$(2),squashfs,$(KDIR_TMP)/vmlinux-$(2)-patched)
-endef
-
 
 Image/Build/Netgear/initramfs=$(call MkuImageLzma/initramfs,$(2),$(3) $(4),,-M $(5))
 
@@ -2445,7 +2421,18 @@ $(eval $(call MultiProfile,Madwifi,EAP7660D WP543))
 endif # ifeq ($(SUBTARGET),generic)
 
 ifeq ($(SUBTARGET),nand)
-$(eval $(call SingleProfile,MerakiNAND,64k,MR18,mr18,MR18,ttyS0,115200,$$(mr18_mtdlayout)))
+
+define Device/mr18
+  BOARDNAME = MR18
+  BLOCKSIZE := 64k
+  CONSOLE = ttyS0,115200
+  MTDPARTS = ar934x-nfc:512k(nandloader)ro,8M(kernel),8M(recovery),113664k(ubi),128k@130944k(odm-caldata)ro
+  IMAGES := sysupgrade.tar
+  KERNEL := kernel-bin | patch-cmdline | MerakiNAND
+  KERNEL_INITRAMFS := kernel-bin | patch-cmdline | MerakiNAND
+  IMAGE/sysupgrade.tar := sysupgrade-nand
+endef
+TARGET_DEVICES += mr18
 
 $(eval $(call SingleProfile,NetgearNAND,64k,WNDR3700V4,wndr3700v4,WNDR3700_V4,ttyS0,115200,$$(wndr4300_mtdlayout),0x33373033,WNDR3700v4,"",-H 29763948+128+128,wndr4300))
 $(eval $(call SingleProfile,NetgearNAND,64k,WNDR4300V1,wndr4300,WNDR4300,ttyS0,115200,$$(wndr4300_mtdlayout),0x33373033,WNDR4300,"",-H 29763948+0+128+128+2x2+3x3,wndr4300))
