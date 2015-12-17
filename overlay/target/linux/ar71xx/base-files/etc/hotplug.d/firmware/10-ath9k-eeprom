@@ -4,7 +4,6 @@
 . /lib/ar71xx.sh
 . /lib/functions.sh
 . /lib/functions/system.sh
-. /lib/upgrade/nand.sh
 
 ath9k_eeprom_die() {
 	echo "ath9k eeprom: " "$*"
@@ -26,6 +25,8 @@ ath9k_eeprom_extract() {
 }
 
 ath9k_ubi_eeprom_extract() {
+	. /lib/upgrade/nand.sh
+
 	local part=$1
 	local offset=$2
 	local count=$3
