@@ -2,7 +2,7 @@
 
 Bringup repo for the Cisco Meraki MR18 on OpenWRT!
 
-Code is based on revision http://git.openwrt.org/?p=openwrt.git;a=commit;h=23feef5dede2fbd6373b03f782e2fbdabb70dca3
+**NOTE: This repo is NO LONGER MAINTAINED as these changes were applied upstream. Refer to http://git.openwrt.org/?p=openwrt.git;a=commit;h=08649070b3de6da8913a5e93d853834ad7293934 and enjoy the official nightles!**
 
 Building
 -----
@@ -17,8 +17,7 @@ Note that you will need to run a modify on the first compile to select the NAND 
 To Do
 -----
 ##### MR18
-  * Code Cleanup?
-  * Start merging things into official nightlies!
+  * You tell me!
 
 Working
 -----
@@ -29,8 +28,9 @@ Working
   * Basic Sysfs Integration
   * Nandloader bootable images
   * Ethernet
-  * Sysconfig w/ kernel_backup support
+  * Sysconfig/Sysupgrade
   * Automatic Wifi Caldata partition selection (Let's prevent ecc errors if possible!)
+  * Merged upstream!
 
 Notice
 ------

@@ -23,7 +23,7 @@ if [ ! -d $clonedir ]; then
   Msg "Cloning Repo..."
   git clone git://git.openwrt.org/openwrt.git $clonedir
   cd $clonedir
-  git reset --hard 23feef5dede2fbd6373b03f782e2fbdabb70dca3
+  #git reset --hard 23feef5dede2fbd6373b03f782e2fbdabb70dca3
   cd - > /dev/null
 fi
 
@@ -35,8 +35,8 @@ if [ $firstbuild = "0" ]; then
   cd - > /dev/null
 fi
 
-Msg "Applying overlay..."
-cp -R ./overlay/* $clonedir/
+#Msg "Applying overlay..."
+#cp -R ./overlay/* $clonedir/
 
 if [ $firstbuild = "1" ]; then
   Msg "Running first build configurations..."
