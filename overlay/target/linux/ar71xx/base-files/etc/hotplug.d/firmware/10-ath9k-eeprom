@@ -4,7 +4,6 @@
 . /lib/ar71xx.sh
 . /lib/functions.sh
 . /lib/functions/system.sh
-. /lib/upgrade/nand.sh
 
 ath9k_eeprom_die() {
 	echo "ath9k eeprom: " "$*"
@@ -54,6 +53,8 @@ case "$FIRMWARE" in
 "soc_wmac.eeprom")
 	case $board in
 	mr18)
+		. /lib/upgrade/nand.sh
+
 		if [ -n "$(nand_find_volume ubi0 caldata)" ]; then
 			ath9k_ubi_eeprom_extract "caldata" 4096 2048
 		else
