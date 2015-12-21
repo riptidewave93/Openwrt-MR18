@@ -1,0 +1,41 @@
+--- a/arch/mips/ath79/Kconfig
++++ b/arch/mips/ath79/Kconfig
+@@ -824,6 +824,17 @@ config ATH79_MACH_MR16
+        select ATH79_DEV_M25P80
+        select ATH79_DEV_WMAC
+
++config ATH79_MACH_MR18
++	bool "Meraki MR18 board support"
++	select SOC_QCA955X
++	select ATH79_DEV_AP9X_PCI if PCI
++	select ATH79_DEV_ETH
++	select ATH79_DEV_GPIO_BUTTONS
++	select ATH79_DEV_LEDS_GPIO
++	select ATH79_DEV_NFC
++	select ATH79_DEV_WMAC
++	select LEDS_NU801
++
+ config ATH79_MACH_MR600
+        bool "OpenMesh MR600 board support"
+        select SOC_AR934X
+
+--- a/arch/mips/ath79/Makefile
++++ b/arch/mips/ath79/Makefile
+@@ -91,6 +91,7 @@ obj-$(CONFIG_ATH79_MACH_HORNET_UB)	+= ma
+ obj-$(CONFIG_ATH79_MACH_MC_MAC1200R)     += mach-mc-mac1200r.o
+ obj-$(CONFIG_ATH79_MACH_MR12)		+= mach-mr12.o
+ obj-$(CONFIG_ATH79_MACH_MR16)		+= mach-mr16.o
++obj-$(CONFIG_ATH79_MACH_MR18)		+= mach-mr18.o
+ obj-$(CONFIG_ATH79_MACH_MR1750)		+= mach-mr1750.o
+ obj-$(CONFIG_ATH79_MACH_MR600)		+= mach-mr600.o
+ obj-$(CONFIG_ATH79_MACH_MR900)		+= mach-mr900.o
+--- a/arch/mips/ath79/machtypes.h
++++ b/arch/mips/ath79/machtypes.h
+@@ -80,6 +80,7 @@ enum ath79_mach_type {
+ 	ATH79_MACH_HORNET_UB,		/* ALFA Networks Hornet-UB */
+ 	ATH79_MACH_MR12,		/* Cisco Meraki MR12 */
+ 	ATH79_MACH_MR16,		/* Cisco Meraki MR16 */
++	ATH79_MACH_MR18,		/* Cisco Meraki MR18 */
+ 	ATH79_MACH_MR1750,		/* OpenMesh MR1750 */
+ 	ATH79_MACH_MR600V2,		/* OpenMesh MR600v2 */
+ 	ATH79_MACH_MR600,		/* OpenMesh MR600 */
